@@ -9,23 +9,9 @@
 #include "common.hpp"
 #include "Eigen/Core"
 #include "Eigen/Geometry"
+#include "Atom.hpp"
 using namespace std;
 double gauss();
-class Atom
-{	
-	public:
-	Eigen::Vector3d position;
-	Eigen::Vector3d velocity;
-	Eigen::Vector3d fold, fnew, vnew, rold, rnew;
-	string  atomname;
-	double  charge, mass, R;
-	Atom(double x, double y, double z)
-	{
-		position.x() = x;
-		position.y() = y;
-		position.z() = z;
-	}
-};
 class System
 {
 	public:
@@ -183,7 +169,7 @@ int main (int argc, char** argv)
 	for (int i = 0; i < atomVector.size(); i++)
 	{
 		Atom& at = atomVector[i];
-		at.fold = at.fnew;
+		at.fold = at.force;
 		at.rold = at.position;
 		at.position = at.rold + dt * at.velocity + dtdt_div2 / at.mass * at.fold;
 	}
@@ -197,7 +183,7 @@ int main (int argc, char** argv)
 		{
 			Eigen::Vector3d noise( gauss(), gauss(), gauss());
 			Atom& at = atomVector[i];
-			at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt / at.mass * (at.fnew + at.R * noise);
+			at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt / at.mass * (at.force + at.R * noise);
 			at.rnew = at.rnew * inB;
 		}
 
@@ -270,7 +256,7 @@ bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 		Atom& at1 = atomVector[shake_list[2 * i]];
 		Atom& at2 = atomVector[shake_list[2 * i + 1]];
 		double gamma;
-		if (at1.atomname == "O" && at2.atomname == "H")
+		if (at1.PDBAtomName[0] == 'O' && at2.PDBAtomName[0] == 'H')
 		{
 			gamma = (dOH - (at1.rnew - at2.rnew).squaredNorm()) /
 				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position).dot(at1.rnew - at2.rnew)));
@@ -291,7 +277,7 @@ bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 		Atom& at2 = atomVector[shake_list[2 * i + 1]];
 		double r = (at1.rnew - at2.rnew).norm();
 		double error;
-		if (at1.atomname  == "O" && at2.atomname == "H")
+		if (at1.PDBAtomName[0]  == 'O' && at2.PDBAtomName[0] == 'H')
 		{
 			error = abs(r - rOH);
 		}
@@ -331,7 +317,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	static double B = 595.0;
 	for (int i = 0; i < atomVector.size(); i++)
 	{
-		atomVector[i].fnew = V3ZERO;
+		atomVector[i].force = V3ZERO;
 	}
 
 	for (int i = 0; i < lj_pair_list.size(); i++)
@@ -350,8 +336,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 			double r6 = r2 * r2 * r2;
 			double r8 = r6 * r2;
 			Eigen::Vector3d f12 = 6. / r8 * (B - A_2 / r6) * del;
-			at1.fnew -= f12;
-			at2.fnew += f12;
+			at1.force -= f12;
+			at2.force += f12;
 		}
 	//	if (!i) print(f12);
 	}
@@ -374,8 +360,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		frc = at1.charge * at2.charge * COULOMB *
 			(const_intra * exp(-ewcoeff2 * sqadel1) 
 			 + erfl(ewcoeff * adel1) / adel1) / sqadel1 * del1;
-		at1.fnew -= frc;
-		at2.fnew += frc;
+		at1.force -= frc;
+		at2.force += frc;
 		Eigen::Vector3d del2 = at1.position - at3.position;
 		del2.x() -= boxsize * floor(del2.x() / boxsize + 0.5);
 		del2.y() -= boxsize * floor(del2.y() / boxsize + 0.5);
@@ -385,8 +371,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		frc = at1.charge * at3.charge * COULOMB *
 			(const_intra * exp(-ewcoeff2 * sqadel2) 
 			 + erfl(ewcoeff * adel2) / adel2) / sqadel2 * del2;
-		at1.fnew -= frc;
-		at3.fnew += frc;
+		at1.force -= frc;
+		at3.force += frc;
 		Eigen::Vector3d del3 = at3.position - at2.position;
 		del3.x() -= boxsize * floor(del3.x() / boxsize + 0.5);
 		del3.y() -= boxsize * floor(del3.y() / boxsize + 0.5);
@@ -396,8 +382,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		frc = at3.charge * at2.charge * COULOMB *
 			(const_intra * exp(-ewcoeff2 * sqadel3) 
 			 + erfl(ewcoeff * adel3) / adel3) / sqadel3 * del3;
-		at3.fnew -= frc;
-		at2.fnew += frc;
+		at3.force -= frc;
+		at2.force += frc;
 	}
 
 
@@ -418,8 +404,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		frc = at1.charge * at2.charge * COULOMB *
 			(-const_intra * exp(-ewcoeff2 * r2) 
 			+ erfc(ewcoeff*r) / r) / r2 *del;
-		at1.fnew += frc;
-		at2.fnew -= frc;
+		at1.force += frc;
+		at2.force -= frc;
 	}
 	
 	
@@ -448,7 +434,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		g[i].z() ? dtmp = 1. : dtmp = 0.5;
 		frc = frc + (dtmp * exp(-agag * factor) / agag * pre) * g[i];
 	}
-		iat.fnew += frc * const_recipro * COULOMB * iat.charge;
+		iat.force += frc * const_recipro * COULOMB * iat.charge;
 //		cout << vabs(frc) << '\n';
 	}
 //	print(atomVector[0].fnew);
@@ -597,9 +583,9 @@ void output(ofstream& fo, vector<Atom>& atomVector, System& system)
 		p2.z() -= boxsize * d;
 		p3.z() -= boxsize * d;
 
-		fo << " " << at1.atomname << setw(20) << p1.x() << setw(20) << p1.y() << setw(20) << p1.z() << '\n';
-		fo << " " << at2.atomname << setw(20) << p2.x() << setw(20) << p2.y() << setw(20) << p2.z() << '\n';
-		fo << " " << at3.atomname << setw(20) << p3.x() << setw(20) << p3.y() << setw(20) << p3.z() << '\n';
+		fo << " " << at1.PDBAtomName[0] << setw(20) << p1.x() << setw(20) << p1.y() << setw(20) << p1.z() << '\n';
+		fo << " " << at2.PDBAtomName[0] << setw(20) << p2.x() << setw(20) << p2.y() << setw(20) << p2.z() << '\n';
+		fo << " " << at3.PDBAtomName[0] << setw(20) << p3.x() << setw(20) << p3.y() << setw(20) << p3.z() << '\n';
 	}
 }
 
@@ -623,7 +609,7 @@ void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list)
 {
 	for (int i = 0; i < atomVector.size(); i++)
 	{
-		if (atomVector[i].atomname == "O")
+		if (atomVector[i].PDBAtomName == "OH2")
 			lj_pair_list.push_back(i);
 	}
 }
@@ -734,7 +720,7 @@ bool load_psf(ifstream& fs, System& system, vector<Atom>& atomVector)
 			is >> system.natom;
 			for (int i = 0; i < system.natom; i++)
 			{
-				Atom at(0., 0., 0.);
+				Atom at;
 				getline(fs, s);
 				istringstream iss(s);
 				int itmp;
@@ -743,7 +729,7 @@ bool load_psf(ifstream& fs, System& system, vector<Atom>& atomVector)
 					>> stmp >> at.charge >> at.mass;
 				//cout << atname << '\n';
 				//cout << s << '\n';
-				at.atomname = atname.substr(0, 1);
+				at.PDBAtomName = atname;
 				atomVector.push_back(at);
 			}
 			return true;

@@ -6,11 +6,11 @@ CXXFLAGS= -O3 -std=c++11 -I/home/hoge/include -L/home/hoge/lib
 
 LIBS=
 
-SRCS = md_alad_ewald.cpp
+SRCS = Atom.cpp md_alad_ewald.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
-HEADS= common.hpp
+HEADS= common.hpp Atom.hpp
 
 $(TARGET): $(OBJS) $(HEADS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)

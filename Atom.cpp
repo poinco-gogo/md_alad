@@ -1,7 +1,7 @@
 #include <sstream>
 #include <iostream>
-#include "Atom.h"
 #include "common.hpp"
+#include "Atom.hpp"
 using namespace std;
 
 Atom::Atom()
