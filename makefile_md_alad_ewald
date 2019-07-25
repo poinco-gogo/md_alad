@@ -10,7 +10,7 @@ SRCS = Atom.cpp md_alad_ewald.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
-HEADS= common.hpp Atom.hpp
+HEADS= common.hpp Lattice.hpp Atom.hpp
 
 $(TARGET): $(OBJS) $(HEADS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)

@@ -10,6 +10,7 @@
 #include "Eigen/Core"
 #include "Eigen/Geometry"
 #include "Atom.hpp"
+#include "Lattice.hpp"
 using namespace std;
 double gauss();
 class System
@@ -17,7 +18,8 @@ class System
 	public:
 	int nstep, natom, kmax;
 	double dt, T, gamma, boxsize, cutoff, volume, ewcoeff, lj, es;
-	Eigen::Vector3d origin, a1, a2, a3, g1, g2, g3, b1, b2, b3;
+	Eigen::Vector3d origin;
+	Lattice lattice;
 
 	System()
 	{
@@ -36,13 +38,6 @@ class System
 	void setup_box()
 	{
 		volume = boxsize * boxsize * boxsize;
-		a1.x() = boxsize; a1.y() = 0; a1.z() = 0;
-		a2.x() = 0; a2.y() = boxsize; a2.z() = 0;
-		a3.x() = 0; a3.y() = 0; a3.z() = boxsize;
-		double rvol2pi = 2. * PI / volume;
-		g1 = a2.cross(a3) * rvol2pi;
-		g2 = a3.cross(a1) * rvol2pi;
-		g3 = a1.cross(a2) * rvol2pi;
 	}
 };
 void print_ene(int istep, System& system, double K, int nfree);
@@ -118,6 +113,9 @@ int main (int argc, char** argv)
 	const double aHOH = 104.52 / 180. * acos(-1.0);
 
 	// make reciprocal vectors
+	Eigen::Vector3d g1 = system.lattice._g1();
+	Eigen::Vector3d g2 = system.lattice._g2();
+	Eigen::Vector3d g3 = system.lattice._g3();
 	vector<Eigen::Vector3d> g;
 	int kmax = system.kmax;
 	int sqkmax = kmax - 1;
@@ -129,7 +127,7 @@ int main (int argc, char** argv)
         {
                 if (k * k + j * j + i * i > sqkmax or (i==0 && j==0 && k==0))
                         continue;
-		Eigen::Vector3d vtmp(i * system.g1.x(), j * system.g2.y(), k * system.g3.z());
+		Eigen::Vector3d vtmp(i * g1.x(), j * g2.y(), k * g3.z());
                 if (vtmp.norm() > dum)
                         dum = vtmp.norm();
                 g.push_back(vtmp);
@@ -327,10 +325,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		for (int j = i + 1; j < lj_pair_list.size(); j++)
 		{
 			Atom& at2 = atomVector[lj_pair_list[j]];
-			Eigen::Vector3d del = at1.position - at2.position;
-			del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
-			del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
-			del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+			Eigen::Vector3d del
+			= system.lattice.delta(at1.position ,at2.position);
 			double r2 = (del).squaredNorm();
 			if (r2 > cutoff2) continue;
 			double r6 = r2 * r2 * r2;
@@ -466,10 +462,8 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		for (int j = i + 1; j < lj_pair_list.size(); j++)
 		{
 			Atom& jat = atomVector[lj_pair_list[j]];
-			Eigen::Vector3d del = iat.position - jat.position;
-			del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
-			del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
-			del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+			Eigen::Vector3d del
+			= system.lattice.delta(iat.position ,jat.position);
 			double roo2 = del.squaredNorm();
 			if (roo2 > cutoff2) continue;
 			double roo6 = roo2 * roo2 * roo2;
@@ -705,6 +699,9 @@ bool load_config(ifstream& fc, System& system)
 			return false;
 		}
 	}
+
+	Lattice ltmp(system.boxsize, system.boxsize, system.boxsize);
+	system.lattice = ltmp;
 
 	return true;
 }
