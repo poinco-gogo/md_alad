@@ -11,6 +11,7 @@
 #include "Eigen/Geometry"
 #include "Atom.hpp"
 #include "PSF.hpp"
+#include "PDB.hpp"
 #include "Lattice.hpp"
 using namespace std;
 double gauss();
@@ -51,7 +52,6 @@ void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list);
 void make_el_pair(vector<Atom>& atomVector, vector<int>& el_pair_list);
 void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
 bool load_config(ifstream& fi, System& system);
-bool load_pdb(ifstream& fp, vector<Atom>& atomVector);
 int main (int argc, char** argv)
 {
 	if (argc < 4)
@@ -70,13 +70,13 @@ int main (int argc, char** argv)
 		return 1;
 	vector<Atom> atomVector;
 	PSF PSFFile(argv[2], &atomVector);
+	PDB PDBFile(argv[3]);
+	if (!PDBFile.LoadCoords(atomVector))
+		return 1;
 
 	const int natom = atomVector.size();
 	const int nwat  = natom / 3;
 	const int nfree = natom * 3 - nwat * 3;
-
-	if (!load_pdb(fp, atomVector))
-		return 1;
 
 	int print_energy_step = 1;
 	int print_trj_step  = 1;
@@ -686,20 +686,4 @@ bool load_config(ifstream& fc, System& system)
 	system.lattice = ltmp;
 
 	return true;
-}
-
-bool load_pdb(ifstream& fp, vector<Atom>& atomVector)
-{
-	string s;
-	int icnt = 0;
-	while (getline(fp, s))
-	{
-		if (s.find("ATOM", 0) != string::npos)
-		{
-			Atom& at = atomVector[icnt++];
-			istringstream is(s.substr(30, 24));
-			is >> at.position.x() >> at.position.y() >> at.position.z();
-		}
-	}
-	return atomVector.size() == icnt ? true : false;
 }
