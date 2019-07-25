@@ -6,23 +6,23 @@
 #include <iomanip>
 #include <vector>
 #include <ctime>
-#include <cmath>
-#include "vector3.h"
+#include "Eigen/Core"
+#include "Eigen/Geometry"
 using namespace std;
 double gauss();
 class Atom
 {	
 	public:
-	Vector3 position;
-	Vector3 velocity;
-	Vector3 fold, fnew, vnew, rold, rnew;
+	Eigen::Vector3d position;
+	Eigen::Vector3d velocity;
+	Eigen::Vector3d fold, fnew, vnew, rold, rnew;
 	string  atomname;
 	double  charge, mass, R;
 	Atom(double x, double y, double z)
 	{
-		position.x = x;
-		position.y = y;
-		position.z = z;
+		position.x() = x;
+		position.y() = y;
+		position.z() = z;
 	}
 };
 class System
@@ -30,7 +30,7 @@ class System
 	public:
 	int nstep, natom, kmax;
 	double dt, T, gamma, boxsize, cutoff, volume, ewcoeff, lj, es;
-	Vector3 origin, a1, a2, a3, g1, g2, g3, b1, b2, b3;
+	Eigen::Vector3d origin, a1, a2, a3, g1, g2, g3, b1, b2, b3;
 
 	System()
 	{
@@ -40,7 +40,7 @@ class System
 		nstep = 0;
 		natom = 0;
 		boxsize = 1;
-		origin.x = 9999; origin.y = 9999; origin.z = 9999;
+		origin.x() = 9999; origin.y() = 9999; origin.z() = 9999;
 		cutoff = 1.;
 		lj = 0;
 		es = 0;
@@ -49,20 +49,20 @@ class System
 	void setup_box()
 	{
 		volume = boxsize * boxsize * boxsize;
-		a1.x = boxsize; a1.y = 0; a1.z = 0;
-		a2.x = 0; a2.y = boxsize; a2.z = 0;
-		a3.x = 0; a3.y = 0; a3.z = boxsize;
+		a1.x() = boxsize; a1.y() = 0; a1.z() = 0;
+		a2.x() = 0; a2.y() = boxsize; a2.z() = 0;
+		a3.x() = 0; a3.y() = 0; a3.z() = boxsize;
 		double rvol2pi = 2. * M_PI / volume;
-		g1 = (a2 % a3) * rvol2pi;
-		g2 = (a3 % a1) * rvol2pi;
-		g3 = (a1 % a2) * rvol2pi;
+		g1 = a2.cross(a3) * rvol2pi;
+		g2 = a3.cross(a1) * rvol2pi;
+		g3 = a1.cross(a2) * rvol2pi;
 	}
 };
 void print_ene(int istep, System& system, double K, int nfree);
 bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
-void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Vector3>& g);
+void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g);
 double calc_kin(vector<Atom>& atomVector);
-void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Vector3>& g);
+void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g);
 void output(ofstream& fo, vector<Atom>& atomVector, System& system);
 void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list);
 void make_el_pair(vector<Atom>& atomVector, vector<int>& el_pair_list);
@@ -133,7 +133,7 @@ int main (int argc, char** argv)
 	const double aHOH = 104.52 / 180. * acos(-1.0);
 
 	// make reciprocal vectors
-	vector<Vector3> g;
+	vector<Eigen::Vector3d> g;
 	int kmax = system.kmax;
 	int sqkmax = kmax - 1;
 	sqkmax *= sqkmax;
@@ -144,9 +144,9 @@ int main (int argc, char** argv)
         {
                 if (k * k + j * j + i * i > sqkmax or (i==0 && j==0 && k==0))
                         continue;
-                Vector3 vtmp(i * system.g1.x, j * system.g2.y, k * system.g3.z);
-                if (vabs(vtmp) > dum)
-                        dum = vabs(vtmp);
+		Eigen::Vector3d vtmp(i * system.g1.x(), j * system.g2.y(), k * system.g3.z());
+                if (vtmp.norm() > dum)
+                        dum = vtmp.norm();
                 g.push_back(vtmp);
         }
         cout << "REMARK gmax = " << dum << '\n';
@@ -163,9 +163,9 @@ int main (int argc, char** argv)
 	for (int i = 0; i < natom; i++)
 	{
 		Atom& at = atomVector[i];
-		at.velocity.x = gauss() * sqrt(kb * T / at.mass);
-		at.velocity.y = gauss() * sqrt(kb * T / at.mass);
-		at.velocity.z = gauss() * sqrt(kb * T / at.mass);
+		at.velocity.x() = gauss() * sqrt(kb * T / at.mass);
+		at.velocity.y() = gauss() * sqrt(kb * T / at.mass);
+		at.velocity.z() = gauss() * sqrt(kb * T / at.mass);
 	}
 	
 	output(fo, atomVector, system);
@@ -196,7 +196,7 @@ int main (int argc, char** argv)
 		calc_frc(atomVector, lj_pair_list, el_pair_list, system, g);
 		for (int i = 0; i < atomVector.size(); i++)
 		{
-			Vector3 noise( gauss(), gauss(), gauss());
+			Eigen::Vector3d noise( gauss(), gauss(), gauss());
 			Atom& at = atomVector[i];
 			at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt / at.mass * (at.fnew + at.R * noise);
 			at.rnew = at.rnew * inB;
@@ -274,13 +274,13 @@ bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 		double gamma;
 		if (at1.atomname == "O" && at2.atomname == "H")
 		{
-			gamma = (dOH - norm(at1.rnew - at2.rnew)) / 
-				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position) * (at1.rnew - at2.rnew)));
+			gamma = (dOH - (at1.rnew - at2.rnew).squaredNorm()) /
+				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position).dot(at1.rnew - at2.rnew)));
 		}
 		else
 		{
-			gamma = (dHH - norm(at1.rnew - at2.rnew)) / 
-				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position) * (at1.rnew - at2.rnew)));
+			gamma = (dHH - (at1.rnew - at2.rnew).squaredNorm()) /
+				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position).dot(at1.rnew - at2.rnew)));
 
 		}
 		at1.rnew = at1.rnew + gamma * (at1.position - at2.position) / at1.mass;
@@ -291,7 +291,7 @@ bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 	{
 		Atom& at1 = atomVector[shake_list[2 * i]];
 		Atom& at2 = atomVector[shake_list[2 * i + 1]];
-		double r = vabs(at1.rnew - at2.rnew);
+		double r = (at1.rnew - at2.rnew).norm();
 		double error;
 		if (at1.atomname  == "O" && at2.atomname == "H")
 		{
@@ -313,12 +313,12 @@ double calc_kin(vector<Atom>& atomVector)
 	for (int i = 0; i < atomVector.size(); i++)
 	{
 		Atom& at = atomVector[i];
-		k += at.mass * norm(at.vnew);
+		k += at.mass * (at.vnew).squaredNorm();
 	}
 	return k * 0.5;
 }
 
-void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Vector3>& g)
+void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g)
 {
 	static double cutoff   = system.cutoff;
 	static double cutoff2  = cutoff * cutoff;
@@ -334,9 +334,9 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	static double C = 332.0636;
 	for (int i = 0; i < atomVector.size(); i++)
 	{
-		atomVector[i].fnew.x = 0.;
-		atomVector[i].fnew.y = 0.;
-		atomVector[i].fnew.z = 0.;
+		atomVector[i].fnew.x() = 0.;
+		atomVector[i].fnew.y() = 0.;
+		atomVector[i].fnew.z() = 0.;
 	}
 
 	for (int i = 0; i < lj_pair_list.size(); i++)
@@ -346,15 +346,15 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		for (int j = i + 1; j < lj_pair_list.size(); j++)
 		{
 			Atom& at2 = atomVector[lj_pair_list[j]];
-			Vector3 del = at1.position - at2.position;
-			del.x -= boxsize * floor(del.x / boxsize + 0.5);
-			del.y -= boxsize * floor(del.y / boxsize + 0.5);
-			del.z -= boxsize * floor(del.z / boxsize + 0.5);
-			double r2 = norm(del);
+			Eigen::Vector3d del = at1.position - at2.position;
+			del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
+			del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
+			del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+			double r2 = (del).squaredNorm();
 			if (r2 > cutoff2) continue;
 			double r6 = r2 * r2 * r2;
 			double r8 = r6 * r2;
-			Vector3 f12 = 6. / r8 * (B - A_2 / r6) * del;
+			Eigen::Vector3d f12 = 6. / r8 * (B - A_2 / r6) * del;
 			at1.fnew -= f12;
 			at2.fnew += f12;
 		}
@@ -365,38 +365,38 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	// ewald intra force
 	for (int i = 0; i < atomVector.size() / 3; i++)
 	{
-		Vector3 frc(0., 0., 0.);
+		Eigen::Vector3d frc(0., 0., 0.);
 		int j = 3 * i;
 		Atom& at1 = atomVector[j];
 		Atom& at2 = atomVector[j + 1];
 		Atom& at3 = atomVector[j + 2];
-		Vector3 del1 = at1.position - at2.position;
-		del1.x -= boxsize * floor(del1.x / boxsize + 0.5);
-		del1.y -= boxsize * floor(del1.y / boxsize + 0.5);
-		del1.z -= boxsize * floor(del1.z / boxsize + 0.5);
-		double adel1 = vabs(del1);
+		Eigen::Vector3d del1 = at1.position - at2.position;
+		del1.x() -= boxsize * floor(del1.x() / boxsize + 0.5);
+		del1.y() -= boxsize * floor(del1.y() / boxsize + 0.5);
+		del1.z() -= boxsize * floor(del1.z() / boxsize + 0.5);
+		double adel1 = del1.norm();
 		double sqadel1 = adel1 * adel1;
 		frc = at1.charge * at2.charge * C * 
 			(const_intra * exp(-ewcoeff2 * sqadel1) 
 			 + erfl(ewcoeff * adel1) / adel1) / sqadel1 * del1;
 		at1.fnew -= frc;
 		at2.fnew += frc;
-		Vector3 del2 = at1.position - at3.position;
-		del2.x -= boxsize * floor(del2.x / boxsize + 0.5);
-		del2.y -= boxsize * floor(del2.y / boxsize + 0.5);
-		del2.z -= boxsize * floor(del2.z / boxsize + 0.5);
-		double adel2 = vabs(del2);
+		Eigen::Vector3d del2 = at1.position - at3.position;
+		del2.x() -= boxsize * floor(del2.x() / boxsize + 0.5);
+		del2.y() -= boxsize * floor(del2.y() / boxsize + 0.5);
+		del2.z() -= boxsize * floor(del2.z() / boxsize + 0.5);
+		double adel2 = del2.norm();
 		double sqadel2 = adel2 * adel2;
 		frc = at1.charge * at3.charge * C * 
 			(const_intra * exp(-ewcoeff2 * sqadel2) 
 			 + erfl(ewcoeff * adel2) / adel2) / sqadel2 * del2;
 		at1.fnew -= frc;
 		at3.fnew += frc;
-		Vector3 del3 = at3.position - at2.position;
-		del3.x -= boxsize * floor(del3.x / boxsize + 0.5);
-		del3.y -= boxsize * floor(del3.y / boxsize + 0.5);
-		del3.z -= boxsize * floor(del3.z / boxsize + 0.5);
-		double adel3 = vabs(del3);
+		Eigen::Vector3d del3 = at3.position - at2.position;
+		del3.x() -= boxsize * floor(del3.x() / boxsize + 0.5);
+		del3.y() -= boxsize * floor(del3.y() / boxsize + 0.5);
+		del3.z() -= boxsize * floor(del3.z() / boxsize + 0.5);
+		double adel3 = del3.norm();
 		double sqadel3 = adel3 * adel3;
 		frc = at3.charge * at2.charge * C * 
 			(const_intra * exp(-ewcoeff2 * sqadel3) 
@@ -412,14 +412,14 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at1 = atomVector[el_pair_list[2 * i]];
 		Atom& at2 = atomVector[el_pair_list[2 * i + 1]];
 
-		Vector3 del = at1.position - at2.position;
-		del.x -= boxsize * floor(del.x / boxsize + 0.5);
-		del.y -= boxsize * floor(del.y / boxsize + 0.5);
-		del.z -= boxsize * floor(del.z / boxsize + 0.5);
-		double r2 = norm(del);
+		Eigen::Vector3d del = at1.position - at2.position;
+		del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
+		del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
+		del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+		double r2 = del.squaredNorm();
 		if (r2 > cutoff2) continue;
 		double r = sqrt(r2);
-		Vector3 frc(0., 0., 0.);
+		Eigen::Vector3d frc(0., 0., 0.);
 		frc = at1.charge * at2.charge * C *
 			(-const_intra * exp(-ewcoeff2 * r2) 
 			+ erfc(ewcoeff*r) / r) / r2 *del;
@@ -432,25 +432,25 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	for (int ii = 0; ii < atomVector.size(); ii++)
 	{
 		Atom& iat = atomVector[ii];
-		Vector3 frc(0., 0., 0.);
+		Eigen::Vector3d frc(0., 0., 0.);
 	for (int i = 0; i < g.size(); i++)
 	{
-		double ag = vabs(g[i]);
+		double ag = g[i].norm();
 		double agag = ag * ag;
 		double pre, dtmp;
 		pre = 0;
 		for (int j = 0; j < atomVector.size(); j++)
 		{
 			Atom& jat = atomVector[j];
-			Vector3 del = iat.position - jat.position;
-			del.x -= boxsize * floor(del.x / boxsize + 0.5);
-			del.y -= boxsize * floor(del.y / boxsize + 0.5);
-			del.z -= boxsize * floor(del.z / boxsize + 0.5);
-			double dot = g[i] * del;
+			Eigen::Vector3d del = iat.position - jat.position;
+			del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
+			del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
+			del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+			double dot = g[i].dot(del);
 
 			pre += jat.charge * sin(dot);
 		}
-		g[i].z ? dtmp = 1. : dtmp = 0.5;
+		g[i].z() ? dtmp = 1. : dtmp = 0.5;
 		frc = frc + (dtmp * exp(-agag * factor) / agag * pre) * g[i];
 	}
 		iat.fnew += frc * const_recipro * C * iat.charge;
@@ -459,7 +459,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 //	print(atomVector[0].fnew);
 }
 
-void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Vector3>& g)
+void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g)
 {
 	static double cutoff = system.cutoff;
 	static double cutoff2 = cutoff * cutoff;
@@ -486,11 +486,11 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		for (int j = i + 1; j < lj_pair_list.size(); j++)
 		{
 			Atom& jat = atomVector[lj_pair_list[j]];
-			Vector3 del = iat.position - jat.position;
-			del.x -= boxsize * floor(del.x / boxsize + 0.5);
-			del.y -= boxsize * floor(del.y / boxsize + 0.5);
-			del.z -= boxsize * floor(del.z / boxsize + 0.5);
-			double roo2 = norm(del);
+			Eigen::Vector3d del = iat.position - jat.position;
+			del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
+			del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
+			del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+			double roo2 = del.squaredNorm();
 			if (roo2 > cutoff2) continue;
 			double roo6 = roo2 * roo2 * roo2;
 			system.lj += A / (roo6 * roo6) - B / roo6;
@@ -504,21 +504,21 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at1 = atomVector[j];
 		Atom& at2 = atomVector[j + 1];
 		Atom& at3 = atomVector[j + 2];
-		Vector3 del1 = at1.position - at2.position;
-		del1.x -= boxsize * floor(del1.x / boxsize + 0.5);
-		del1.y -= boxsize * floor(del1.y / boxsize + 0.5);
-		del1.z -= boxsize * floor(del1.z / boxsize + 0.5);
-		double adel1 = vabs(del1);
-		Vector3 del2 = at1.position - at3.position;
-		del2.x -= boxsize * floor(del2.x / boxsize + 0.5);
-		del2.y -= boxsize * floor(del2.y / boxsize + 0.5);
-		del2.z -= boxsize * floor(del2.z / boxsize + 0.5);
-		double adel2 = vabs(del2);
-		Vector3 del3 = at3.position - at2.position;
-		del3.x -= boxsize * floor(del3.x / boxsize + 0.5);
-		del3.y -= boxsize * floor(del3.y / boxsize + 0.5);
-		del3.z -= boxsize * floor(del3.z / boxsize + 0.5);
-		double adel3 = vabs(del3);
+		Eigen::Vector3d del1 = at1.position - at2.position;
+		del1.x() -= boxsize * floor(del1.x() / boxsize + 0.5);
+		del1.y() -= boxsize * floor(del1.y() / boxsize + 0.5);
+		del1.z() -= boxsize * floor(del1.z() / boxsize + 0.5);
+		double adel1 = del1.norm();
+		Eigen::Vector3d del2 = at1.position - at3.position;
+		del2.x() -= boxsize * floor(del2.x() / boxsize + 0.5);
+		del2.y() -= boxsize * floor(del2.y() / boxsize + 0.5);
+		del2.z() -= boxsize * floor(del2.z() / boxsize + 0.5);
+		double adel2 = del2.norm();
+		Eigen::Vector3d del3 = at3.position - at2.position;
+		del3.x() -= boxsize * floor(del3.x() / boxsize + 0.5);
+		del3.y() -= boxsize * floor(del3.y() / boxsize + 0.5);
+		del3.z() -= boxsize * floor(del3.z() / boxsize + 0.5);
+		double adel3 = del3.norm();
 		ew_intra += at1.charge*at2.charge*erfl(ewcoeff*adel1)/adel1;
 		ew_intra += at1.charge*at3.charge*erfl(ewcoeff*adel2)/adel2;
 		ew_intra += at3.charge*at2.charge*erfl(ewcoeff*adel3)/adel3;
@@ -530,11 +530,11 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at1 = atomVector[el_pair_list[2 * i]];
 		Atom& at2 = atomVector[el_pair_list[2 * i + 1]];
 
-		Vector3 del = at1.position - at2.position;
-		del.x -= boxsize * floor(del.x / boxsize + 0.5);
-		del.y -= boxsize * floor(del.y / boxsize + 0.5);
-		del.z -= boxsize * floor(del.z / boxsize + 0.5);
-		double r = vabs(del);
+		Eigen::Vector3d del = at1.position - at2.position;
+		del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
+		del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
+		del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+		double r = del.norm();
 		if (r > cutoff) continue;
 		ew_direct += at1.charge * at2.charge * erfc(ewcoeff*r)/r;
 	}
@@ -542,23 +542,23 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	// ewald reciprocal space summation
 	for (int i = 0; i < g.size(); i++)
 	{
-		double ag = vabs(g[i]);
+		double ag = g[i].norm();
 		double agag = ag * ag;
 		double re, im, dtmp;
 		re = 0;
 		im = 0;
 		for (int j = 0; j < atomVector.size(); j++)
 		{
-			Vector3 del = atomVector[j].position;
-			del.x -= boxsize * floor(del.x / boxsize + 0.5);
-			del.y -= boxsize * floor(del.y / boxsize + 0.5);
-			del.z -= boxsize * floor(del.z / boxsize + 0.5);
-			double dot = g[i] * del;
+			Eigen::Vector3d del = atomVector[j].position;
+			del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
+			del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
+			del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+			double dot = g[i].dot(del);
 
 			re += atomVector[j].charge * cos(dot);
 			im += atomVector[j].charge * sin(dot);
 		}
-		g[i].z ? dtmp = 1. : dtmp = 0.5;
+		g[i].z() ? dtmp = 1. : dtmp = 0.5;
 		ew_recipro += dtmp * exp(-agag * factor) / agag * (re * re + im * im);
 	}
 
@@ -583,29 +583,29 @@ void output(ofstream& fo, vector<Atom>& atomVector, System& system)
 		Atom& at1 = atomVector[j];
 		Atom& at2 = atomVector[j + 1];
 		Atom& at3 = atomVector[j + 2];
-		Vector3 p1 = at1.position;
-		Vector3 p2 = at2.position;
-		Vector3 p3 = at3.position;
-		Vector3 vcom = (p1 + p2 + p3) / 3.;
+		Eigen::Vector3d p1 = at1.position;
+		Eigen::Vector3d p2 = at2.position;
+		Eigen::Vector3d p3 = at3.position;
+		Eigen::Vector3d vcom = (p1 + p2 + p3) / 3.;
 
-		double d = floor(0.5 + vcom.x / boxsize);
-		p1.x -= boxsize * d;
-		p2.x -= boxsize * d;
-		p3.x -= boxsize * d;
+		double d = floor(0.5 + vcom.x() / boxsize);
+		p1.x() -= boxsize * d;
+		p2.x() -= boxsize * d;
+		p3.x() -= boxsize * d;
 		
-		d = floor(0.5 + vcom.y / boxsize);
-		p1.y -= boxsize * d;
-		p2.y -= boxsize * d;
-		p3.y -= boxsize * d;
+		d = floor(0.5 + vcom.y() / boxsize);
+		p1.y() -= boxsize * d;
+		p2.y() -= boxsize * d;
+		p3.y() -= boxsize * d;
 		
-		d = floor(0.5 + vcom.z / boxsize);
-		p1.z -= boxsize * d;
-		p2.z -= boxsize * d;
-		p3.z -= boxsize * d;
+		d = floor(0.5 + vcom.z() / boxsize);
+		p1.z() -= boxsize * d;
+		p2.z() -= boxsize * d;
+		p3.z() -= boxsize * d;
 
-		fo << " " << at1.atomname << setw(20) << p1.x << setw(20) << p1.y << setw(20) << p1.z << '\n';
-		fo << " " << at2.atomname << setw(20) << p2.x << setw(20) << p2.y << setw(20) << p2.z << '\n';
-		fo << " " << at3.atomname << setw(20) << p3.x << setw(20) << p3.y << setw(20) << p3.z << '\n';
+		fo << " " << at1.atomname << setw(20) << p1.x() << setw(20) << p1.y() << setw(20) << p1.z() << '\n';
+		fo << " " << at2.atomname << setw(20) << p2.x() << setw(20) << p2.y() << setw(20) << p2.z() << '\n';
+		fo << " " << at3.atomname << setw(20) << p3.x() << setw(20) << p3.y() << setw(20) << p3.z() << '\n';
 	}
 }
 
@@ -701,9 +701,9 @@ bool load_config(ifstream& fc, System& system)
 		}
 		else if (s.find("origin", 0) != string::npos)
 		{
-			is >> stmp >> system.origin.x
-				>> system.origin.y
-				>> system.origin.z;
+			is >> stmp >> system.origin.x()
+				>> system.origin.y()
+				>> system.origin.z();
 		}
 		else if (s.find("cutoff", 0) != string::npos)
 		{
@@ -769,7 +769,7 @@ bool load_pdb(ifstream& fp, vector<Atom>& atomVector)
 		{
 			Atom& at = atomVector[icnt++];
 			istringstream is(s.substr(30, 24));
-			is >> at.position.x >> at.position.y >> at.position.z;
+			is >> at.position.x() >> at.position.y() >> at.position.z();
 		}
 	}
 	return atomVector.size() == icnt ? true : false;
