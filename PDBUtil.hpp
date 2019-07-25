@@ -2,7 +2,7 @@
 #define ___CLASS_PDBUTIL
 #include <fstream>
 #include <string>
-#include "Atom.h"
+#include "Atom.hpp"
 class PDBUtil
 {
 	public:
@@ -11,7 +11,7 @@ class PDBUtil
 	PDBUtil();
 
 	// member funtion
-	void writePDBline(const std::ofstream& fo, const Atom& atom);
-	void  readPDBline(const  std::string line, const Atom& atom);
+	void writePDBline(std::ofstream& fo, Atom& atom);
+	void  readPDBline(std::string line, Atom& atom);
 };
 #endif

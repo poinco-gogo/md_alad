@@ -9,7 +9,7 @@ PDBUtil::PDBUtil()
 	// currently nothing to do.
 }
 
-void PDBUtil::writePDBline(const ofstream& fo, const Atom& atom)
+void PDBUtil::writePDBline(ofstream& fo, Atom& atom)
 {
 	ostringstream os;
 	os << "ATOM" << setw(7) << atom.PSFIndex << ' ';
@@ -49,7 +49,7 @@ void PDBUtil::writePDBline(const ofstream& fo, const Atom& atom)
 	fo.write(s.c_str(), s.size());
 }
 
-void PDBUtil::readPDBline(const string line, const Atom& atom)
+void PDBUtil::readPDBline(string line, Atom& atom)
 {
 	istringstream is1(line.substr(4, 7)); // index
 	istringstream is2(line.substr(11, 6)); // atom name

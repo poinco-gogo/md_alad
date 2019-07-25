@@ -10,6 +10,7 @@
 #include "Eigen/Core"
 #include "Eigen/Geometry"
 #include "Atom.hpp"
+#include "PSF.hpp"
 #include "Lattice.hpp"
 using namespace std;
 double gauss();
@@ -50,7 +51,6 @@ void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list);
 void make_el_pair(vector<Atom>& atomVector, vector<int>& el_pair_list);
 void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
 bool load_config(ifstream& fi, System& system);
-bool load_psf(ifstream& fs, System& system, vector<Atom>& atomVector);
 bool load_pdb(ifstream& fp, vector<Atom>& atomVector);
 int main (int argc, char** argv)
 {
@@ -63,17 +63,15 @@ int main (int argc, char** argv)
 	srand( (unsigned int)time(NULL) );
 	
 	ofstream fo(argv[1]);
-	ifstream fs(argv[2]);
 	ifstream fp(argv[3]);
 	ifstream fc(argv[4]);
 	System system;
 	if (!load_config(fc, system))
 		return 1;
 	vector<Atom> atomVector;
-	if (!load_psf(fs, system, atomVector))
-		return 1;
+	PSF PSFFile(argv[2], &atomVector);
 
-	const int natom = system.natom;
+	const int natom = atomVector.size();
 	const int nwat  = natom / 3;
 	const int nfree = natom * 3 - nwat * 3;
 
@@ -688,36 +686,6 @@ bool load_config(ifstream& fc, System& system)
 	system.lattice = ltmp;
 
 	return true;
-}
-
-bool load_psf(ifstream& fs, System& system, vector<Atom>& atomVector)
-{
-	string s;
-	while (getline(fs, s))
-	{
-		if (s.find("NATOM", 10) != string::npos)
-		{
-			istringstream is(s);
-			is >> system.natom;
-			for (int i = 0; i < system.natom; i++)
-			{
-				Atom at;
-				getline(fs, s);
-				istringstream iss(s);
-				int itmp;
-				string stmp, atname;
-				iss >> itmp >> stmp >> itmp >> stmp >> atname
-					>> stmp >> at.charge >> at.mass;
-				//cout << atname << '\n';
-				//cout << s << '\n';
-				at.PDBAtomName = atname;
-				atomVector.push_back(at);
-			}
-			return true;
-		}
-
-	}
-	return false;
 }
 
 bool load_pdb(ifstream& fp, vector<Atom>& atomVector)

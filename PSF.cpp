@@ -35,6 +35,7 @@ void PSF::read_PSF()
 	}
 
 	int loc;
+	string s;
 	
 	while ( getline(fi, s) )
 	{
@@ -51,7 +52,7 @@ void PSF::read_PSF()
 	fi.close();
 }
 
-void PSF::get_atom_list(const int natom, const ifstream& fi)
+void PSF::get_atom_list(const int natom, ifstream& fi)
 {
 	cout << "REMARK TOTAL ATOM : " << natom << '\n';
 	ptr_atomVector -> resize(natom);
@@ -94,7 +95,7 @@ void PSF::writePDB(string filename, string header, const vector<int>& indexVecto
 	
 	for (int i = 0; i < indexVector.size(); i++)
 	{
-		int ii = ptr_indexVector -> at(i) - 1;
+		int ii = indexVector[i] - 1;
 		PDBJOBS.writePDBline(fo, ptr_atomVector -> at(ii));
 	}
 }// end of function writePDB()
@@ -118,7 +119,7 @@ void PSF::writePDB(string filename, string header)
 	}
 }// end of function writePDB()
 
-void PSF::writePDB(string filename, const vector<Atom>& atomVector, string header)
+void PSF::writePDB(string filename, vector<Atom>& atomVector, string header)
 {
 	PDBUtil PDBJOBS;
 	

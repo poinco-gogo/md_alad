@@ -5,12 +5,13 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include "Atom.h"
+#include "Atom.hpp"
 
 class PSF 
 {
 	private:
 	int natom;
+	std::string filename;
 	std::vector<Atom>* ptr_atomVector;
 	
 	public:
@@ -28,11 +29,11 @@ class PSF
 
 	void writePDB(std::string filename, std::string header);
 	void writePDB(std::string filename, std::string header, const std::vector<int>& indexVector);
-	void writePDB(std::string filename, const std::vector<Atom>& atomVector, std::string header);
+	void writePDB(std::string filename, std::vector<Atom>& atomVector, std::string header);
 
 	// for internal use
 	private:
 	void read_PSF();
-	void get_atom_list(const int natom, const std::ifstream& fi);
+	void get_atom_list(const int natom, std::ifstream& fi);
 };
 #endif
