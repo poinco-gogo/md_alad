@@ -76,6 +76,7 @@ void Atom::reset_parameters()
 	force    = V3ZERO;
 	constfrc = V3ZERO;
 	velocity = V3ZERO;
+	vnew     = V3ZERO;
 	rnew     = V3ZERO;
 	rold     = V3ZERO;
 
