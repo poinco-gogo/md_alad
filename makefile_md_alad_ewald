@@ -10,7 +10,7 @@ SRCS = md_alad_ewald.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
-HEADS= 
+HEADS= common.hpp
 
 $(TARGET): $(OBJS) $(HEADS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)

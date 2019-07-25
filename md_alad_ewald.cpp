@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <vector>
 #include <ctime>
+#include "common.hpp"
 #include "Eigen/Core"
 #include "Eigen/Geometry"
 using namespace std;
@@ -52,7 +53,7 @@ class System
 		a1.x() = boxsize; a1.y() = 0; a1.z() = 0;
 		a2.x() = 0; a2.y() = boxsize; a2.z() = 0;
 		a3.x() = 0; a3.y() = 0; a3.z() = boxsize;
-		double rvol2pi = 2. * M_PI / volume;
+		double rvol2pi = 2. * PI / volume;
 		g1 = a2.cross(a3) * rvol2pi;
 		g2 = a3.cross(a1) * rvol2pi;
 		g3 = a1.cross(a2) * rvol2pi;
@@ -102,14 +103,12 @@ int main (int argc, char** argv)
 	int print_trj_step  = 1;
 	int nstep = system.nstep;
 
-	const double ps2asu = 20.455;
         const double dt_ps = system.dt * 0.001; // in ps
         const double gamma_ps = system.gamma; // in ps-1
-        const double dt = dt_ps * ps2asu;
-        const double gamma = gamma_ps / ps2asu;
+        const double dt = dt_ps * PS2ASU;
+        const double gamma = gamma_ps / PS2ASU;
 	const double dt_div2 = dt * 0.5;
 	const double dtdt_div2 = dt * dt * 0.5;
-	const double kb = 0.001987191; // kcal/mol/K
 	const double  T = system.T; // K
         const double A = 1. - gamma * dt * 0.5;
         const double B = 1. + gamma * dt * 0.5;
@@ -119,7 +118,7 @@ int main (int argc, char** argv)
 	for (int i = 0; i < natom; i++)
 	{	
 		Atom& at = atomVector[i];
-		at.R = sqrt(2. * kb * T * gamma * at.mass / dt);
+		at.R = sqrt(2. * BOLTZMAN * T * gamma * at.mass / dt);
 	}
 
 	cout << "REMARK Number of water molecules " << nwat << '\n';
@@ -156,16 +155,16 @@ int main (int argc, char** argv)
 	{	
 		ew_self += atomVector[i].charge * atomVector[i].charge;
 	}
-	ew_self *= -system.ewcoeff / sqrt(M_PI) * 332.0636;
+	ew_self *= -system.ewcoeff / SQRTPI * COULOMB;
 
 
 	int icnt = 0;
 	for (int i = 0; i < natom; i++)
 	{
 		Atom& at = atomVector[i];
-		at.velocity.x() = gauss() * sqrt(kb * T / at.mass);
-		at.velocity.y() = gauss() * sqrt(kb * T / at.mass);
-		at.velocity.z() = gauss() * sqrt(kb * T / at.mass);
+		at.velocity.x() = gauss() * sqrt(BOLTZMAN * T / at.mass);
+		at.velocity.y() = gauss() * sqrt(BOLTZMAN * T / at.mass);
+		at.velocity.z() = gauss() * sqrt(BOLTZMAN * T / at.mass);
 	}
 	
 	output(fo, atomVector, system);
@@ -244,7 +243,6 @@ int main (int argc, char** argv)
 
 void print_ene(int istep, System& system, double K, int nfree)
 {
-	static double kb = 0.001987191; //kcal/mol/K
 	double totpot = system.es + system.lj;
 	cout 
 		<< setprecision(4) << fixed
@@ -254,7 +252,7 @@ void print_ene(int istep, System& system, double K, int nfree)
 		<< setw(16) << totpot
 		<< setw(16) << K
 		<< setw(16) << totpot + K
-		<< setw(16) << K * 2. / nfree / kb
+		<< setw(16) << K * 2. / nfree * INVBOLTZMAN
 		<< '\n';
 }
 
@@ -263,7 +261,7 @@ bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 	static const double eps = 1e-6;
 	static const double eps2 = eps * eps;
 	static const double rOH = 0.9572;
-	static const double aHOH = 104.52 / 180. * acos(-1.0);
+	static const double aHOH = 104.52 * DEG2RAD;
 	static const double dOH = rOH * rOH;
 	static const double rHH = rOH * sin(aHOH/2.) * 2.;
 	static const double dHH = rHH * rHH;
@@ -326,17 +324,14 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	static double ewcoeff2 = ewcoeff * ewcoeff;
 	static double boxsize  = system.boxsize;
 	static double factor = 1. / (4. * ewcoeff * ewcoeff);
-	static double const_intra   = -2. * ewcoeff / sqrt(acos(-1.));
-	static double const_recipro = 4. * acos(-1.) / system.volume;
+	static double const_intra   = -2. * ewcoeff / SQRTPI;
+	static double const_recipro = 4. * PI / system.volume;
 	static double A = 582. * 1e3;
 	static double A_2 = A * 2.;
 	static double B = 595.0;
-	static double C = 332.0636;
 	for (int i = 0; i < atomVector.size(); i++)
 	{
-		atomVector[i].fnew.x() = 0.;
-		atomVector[i].fnew.y() = 0.;
-		atomVector[i].fnew.z() = 0.;
+		atomVector[i].fnew = V3ZERO;
 	}
 
 	for (int i = 0; i < lj_pair_list.size(); i++)
@@ -365,7 +360,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	// ewald intra force
 	for (int i = 0; i < atomVector.size() / 3; i++)
 	{
-		Eigen::Vector3d frc(0., 0., 0.);
+		Eigen::Vector3d frc = V3ZERO;
 		int j = 3 * i;
 		Atom& at1 = atomVector[j];
 		Atom& at2 = atomVector[j + 1];
@@ -376,7 +371,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		del1.z() -= boxsize * floor(del1.z() / boxsize + 0.5);
 		double adel1 = del1.norm();
 		double sqadel1 = adel1 * adel1;
-		frc = at1.charge * at2.charge * C * 
+		frc = at1.charge * at2.charge * COULOMB *
 			(const_intra * exp(-ewcoeff2 * sqadel1) 
 			 + erfl(ewcoeff * adel1) / adel1) / sqadel1 * del1;
 		at1.fnew -= frc;
@@ -387,7 +382,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		del2.z() -= boxsize * floor(del2.z() / boxsize + 0.5);
 		double adel2 = del2.norm();
 		double sqadel2 = adel2 * adel2;
-		frc = at1.charge * at3.charge * C * 
+		frc = at1.charge * at3.charge * COULOMB *
 			(const_intra * exp(-ewcoeff2 * sqadel2) 
 			 + erfl(ewcoeff * adel2) / adel2) / sqadel2 * del2;
 		at1.fnew -= frc;
@@ -398,7 +393,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		del3.z() -= boxsize * floor(del3.z() / boxsize + 0.5);
 		double adel3 = del3.norm();
 		double sqadel3 = adel3 * adel3;
-		frc = at3.charge * at2.charge * C * 
+		frc = at3.charge * at2.charge * COULOMB *
 			(const_intra * exp(-ewcoeff2 * sqadel3) 
 			 + erfl(ewcoeff * adel3) / adel3) / sqadel3 * del3;
 		at3.fnew -= frc;
@@ -419,8 +414,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		double r2 = del.squaredNorm();
 		if (r2 > cutoff2) continue;
 		double r = sqrt(r2);
-		Eigen::Vector3d frc(0., 0., 0.);
-		frc = at1.charge * at2.charge * C *
+		Eigen::Vector3d frc = V3ZERO;
+		frc = at1.charge * at2.charge * COULOMB *
 			(-const_intra * exp(-ewcoeff2 * r2) 
 			+ erfc(ewcoeff*r) / r) / r2 *del;
 		at1.fnew += frc;
@@ -432,7 +427,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	for (int ii = 0; ii < atomVector.size(); ii++)
 	{
 		Atom& iat = atomVector[ii];
-		Eigen::Vector3d frc(0., 0., 0.);
+		Eigen::Vector3d frc = V3ZERO;
 	for (int i = 0; i < g.size(); i++)
 	{
 		double ag = g[i].norm();
@@ -453,7 +448,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		g[i].z() ? dtmp = 1. : dtmp = 0.5;
 		frc = frc + (dtmp * exp(-agag * factor) / agag * pre) * g[i];
 	}
-		iat.fnew += frc * const_recipro * C * iat.charge;
+		iat.fnew += frc * const_recipro * COULOMB * iat.charge;
 //		cout << vabs(frc) << '\n';
 	}
 //	print(atomVector[0].fnew);
@@ -466,12 +461,11 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 	static double boxsize = system.boxsize;
 	static double ewcoeff = system.ewcoeff;
 	static double factor = 1. / (4. * ewcoeff * ewcoeff);
-	static double const_recipro = 4. * acos(-1.) / system.volume;
+	static double const_recipro = 4. * PI / system.volume;
 	static double A = 582. * 1e3;
 	static double B = 595.0;
 	static double qO = -0.834;
 	static double qH = 0.417;
-	static double C  = 332.0636;
 
 	system.lj = 0;
 	system.es = 0;
@@ -569,7 +563,7 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 //	cout << "el_recipro " << el_recipro * 332.0636<< '\n';
 
 	system.es += ew_direct + ew_recipro - ew_intra;
-	system.es *= C;
+	system.es *= COULOMB;
 }
 
 void output(ofstream& fo, vector<Atom>& atomVector, System& system)
