@@ -389,10 +389,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at1 = atomVector[el_pair_list[2 * i]];
 		Atom& at2 = atomVector[el_pair_list[2 * i + 1]];
 
-		Eigen::Vector3d del = at1.position - at2.position;
-		del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
-		del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
-		del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+		Eigen::Vector3d del
+			= system.lattice.delta(at1.position ,at2.position);
 		double r2 = del.squaredNorm();
 		if (r2 > cutoff2) continue;
 		double r = sqrt(r2);
@@ -504,10 +502,8 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at1 = atomVector[el_pair_list[2 * i]];
 		Atom& at2 = atomVector[el_pair_list[2 * i + 1]];
 
-		Eigen::Vector3d del = at1.position - at2.position;
-		del.x() -= boxsize * floor(del.x() / boxsize + 0.5);
-		del.y() -= boxsize * floor(del.y() / boxsize + 0.5);
-		del.z() -= boxsize * floor(del.z() / boxsize + 0.5);
+		Eigen::Vector3d del
+			= system.lattice.delta(at1.position ,at2.position);
 		double r = del.norm();
 		if (r > cutoff) continue;
 		ew_direct += at1.charge * at2.charge * erfc(ewcoeff*r)/r;
