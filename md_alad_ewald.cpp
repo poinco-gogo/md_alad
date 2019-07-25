@@ -347,10 +347,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at1 = atomVector[j];
 		Atom& at2 = atomVector[j + 1];
 		Atom& at3 = atomVector[j + 2];
-		Eigen::Vector3d del1 = at1.position - at2.position;
-		del1.x() -= boxsize * floor(del1.x() / boxsize + 0.5);
-		del1.y() -= boxsize * floor(del1.y() / boxsize + 0.5);
-		del1.z() -= boxsize * floor(del1.z() / boxsize + 0.5);
+		Eigen::Vector3d del1
+			= system.lattice.delta(at1.position ,at2.position);
 		double adel1 = del1.norm();
 		double sqadel1 = adel1 * adel1;
 		frc = at1.charge * at2.charge * COULOMB *
@@ -358,10 +356,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 			 + erfl(ewcoeff * adel1) / adel1) / sqadel1 * del1;
 		at1.force -= frc;
 		at2.force += frc;
-		Eigen::Vector3d del2 = at1.position - at3.position;
-		del2.x() -= boxsize * floor(del2.x() / boxsize + 0.5);
-		del2.y() -= boxsize * floor(del2.y() / boxsize + 0.5);
-		del2.z() -= boxsize * floor(del2.z() / boxsize + 0.5);
+		Eigen::Vector3d del2
+			= system.lattice.delta(at1.position ,at3.position);
 		double adel2 = del2.norm();
 		double sqadel2 = adel2 * adel2;
 		frc = at1.charge * at3.charge * COULOMB *
@@ -369,10 +365,8 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 			 + erfl(ewcoeff * adel2) / adel2) / sqadel2 * del2;
 		at1.force -= frc;
 		at3.force += frc;
-		Eigen::Vector3d del3 = at3.position - at2.position;
-		del3.x() -= boxsize * floor(del3.x() / boxsize + 0.5);
-		del3.y() -= boxsize * floor(del3.y() / boxsize + 0.5);
-		del3.z() -= boxsize * floor(del3.z() / boxsize + 0.5);
+		Eigen::Vector3d del3
+			= system.lattice.delta(at3.position ,at2.position);
 		double adel3 = del3.norm();
 		double sqadel3 = adel3 * adel3;
 		frc = at3.charge * at2.charge * COULOMB *
@@ -476,20 +470,14 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at1 = atomVector[j];
 		Atom& at2 = atomVector[j + 1];
 		Atom& at3 = atomVector[j + 2];
-		Eigen::Vector3d del1 = at1.position - at2.position;
-		del1.x() -= boxsize * floor(del1.x() / boxsize + 0.5);
-		del1.y() -= boxsize * floor(del1.y() / boxsize + 0.5);
-		del1.z() -= boxsize * floor(del1.z() / boxsize + 0.5);
+		Eigen::Vector3d del1
+			= system.lattice.delta(at1.position ,at2.position);
 		double adel1 = del1.norm();
-		Eigen::Vector3d del2 = at1.position - at3.position;
-		del2.x() -= boxsize * floor(del2.x() / boxsize + 0.5);
-		del2.y() -= boxsize * floor(del2.y() / boxsize + 0.5);
-		del2.z() -= boxsize * floor(del2.z() / boxsize + 0.5);
+		Eigen::Vector3d del2
+			= system.lattice.delta(at1.position ,at3.position);
 		double adel2 = del2.norm();
-		Eigen::Vector3d del3 = at3.position - at2.position;
-		del3.x() -= boxsize * floor(del3.x() / boxsize + 0.5);
-		del3.y() -= boxsize * floor(del3.y() / boxsize + 0.5);
-		del3.z() -= boxsize * floor(del3.z() / boxsize + 0.5);
+		Eigen::Vector3d del3
+			= system.lattice.delta(at3.position ,at2.position);
 		double adel3 = del3.norm();
 		ew_intra += at1.charge*at2.charge*erfl(ewcoeff*adel1)/adel1;
 		ew_intra += at1.charge*at3.charge*erfl(ewcoeff*adel2)/adel2;
