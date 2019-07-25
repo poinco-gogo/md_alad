@@ -1,0 +1,24 @@
+TARGET=md_alad_ewald.x
+
+CXX=icpc
+
+CXXFLAGS= -O3 -std=c++11 -I/home/hoge/include -L/home/hoge/lib
+
+LIBS=
+
+SRCS = md_alad_ewald.cpp
+
+OBJS = $(SRCS:.cpp=.o)
+
+HEADS= 
+
+$(TARGET): $(OBJS) $(HEADS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+
+depend:
+	$(CXX) $(CXXFLAGS) -MM -MG $(SRCS) > Makefile.depend
+
+clean:
+	rm -f $(OBJS) $(TARGET)
+
+-include Makefile.depend
