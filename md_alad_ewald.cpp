@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <vector>
 #include <ctime>
+#include <random>
 #include "common.hpp"
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -16,7 +17,6 @@
 #include "System.hpp"
 #include "Lattice.hpp"
 using namespace std;
-double gauss();
 class Energy
 {
 	public:
@@ -45,14 +45,15 @@ int main (int argc, char** argv)
 		return 1;
 	}
 	
-	srand( (unsigned int)time(NULL) );
-	
 	ofstream fo(argv[1]);
 	Option opt(argv[4]);
 	if (!opt.load_config())
 		return 1;
 
 	System sys(opt);
+
+	mt19937 engine(static_cast<unsigned int>(sys.iseed));
+	normal_distribution<double> dist(0., 1.);
 
 	vector<Atom> atomVector;
 	PSF PSFFile(argv[2], &atomVector);
@@ -129,9 +130,9 @@ int main (int argc, char** argv)
 	for (int i = 0; i < natom; i++)
 	{
 		Atom& at = atomVector[i];
-		at.velocity.x() = gauss() * sqrt(BOLTZMAN * T / at.mass);
-		at.velocity.y() = gauss() * sqrt(BOLTZMAN * T / at.mass);
-		at.velocity.z() = gauss() * sqrt(BOLTZMAN * T / at.mass);
+		at.velocity.x() = dist(engine) * sqrt(BOLTZMAN * T / at.mass);
+		at.velocity.y() = dist(engine) * sqrt(BOLTZMAN * T / at.mass);
+		at.velocity.z() = dist(engine) * sqrt(BOLTZMAN * T / at.mass);
 	}
 	
 	output(fo, atomVector, sys);
@@ -162,7 +163,8 @@ int main (int argc, char** argv)
 		calc_frc(atomVector, lj_pair_list, el_pair_list, sys, g);
 		for (int i = 0; i < atomVector.size(); i++)
 		{
-			Eigen::Vector3d noise( gauss(), gauss(), gauss());
+			Eigen::Vector3d
+			noise( dist(engine), dist(engine), dist(engine));
 			Atom& at = atomVector[i];
 			at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt / at.mass * (at.force + at.R * noise);
 			at.rnew = at.rnew * inB;
@@ -548,22 +550,6 @@ void output(ofstream& fo, vector<Atom>& atomVector, System& sys)
 		fo << " " << at2.PDBAtomName[0] << setw(20) << p2.x() << setw(20) << p2.y() << setw(20) << p2.z() << '\n';
 		fo << " " << at3.PDBAtomName[0] << setw(20) << p3.x() << setw(20) << p3.y() << setw(20) << p3.z() << '\n';
 	}
-}
-
-double gauss()
-{
-	const double A1 = 3.949846138, A3 = 0.252408784;
-	const double A5 = 0.076542912, A7 = 0.008355968;
-	const double A9 = 0.029899776;
-	double sum = 0.;
-	for (int i = 0; i < 12; i++)
-	{
-		sum += rand() / static_cast<double>(RAND_MAX);
-	}
-
-	double R = (sum - 6.) / 4.;
-	double R2 = R * R;
-	return ((((A9 * R2 + A7) * R2 + A5) * R2 + A3) * R2 + A1) * R;
 }
 
 void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list)
