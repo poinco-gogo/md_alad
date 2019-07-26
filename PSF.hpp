@@ -33,6 +33,7 @@ class PSF
 
 	bool set_bond_parm(std::vector<Bond>& bondParmVector);
 	bool set_angle_parm(std::vector<Angle>& angleParmVector);
+	bool set_lj_parm(std::vector<Atom>& LJParmVector);
 
 	void showAtom(const Atom& atom);
 	void showResidue(int resID);

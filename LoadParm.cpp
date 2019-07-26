@@ -24,7 +24,7 @@ void LoadParm::open_fi(ifstream& fi)
 	string s;
 
 	cout << "REMARK ---------------------\n"
-		"REMARK parameter summary\n";
+		"REMARK parameter summary (" << filename << ")\n";
 
 	while (getline(fi, s))
 	{
@@ -32,7 +32,7 @@ void LoadParm::open_fi(ifstream& fi)
 		{	
 			get_bond_parameters(fi);
 			get_angle_parameters(fi);
-			get_cmap_parameteres(fi);
+			get_cmap_parameters(fi);
 			get_LJ_parameters(fi);
 		}
 	}
@@ -196,7 +196,7 @@ void LoadParm::duplication_check()
 
 		for (int j = i + 1; j < angleParmVector.size(); j++)
 		{
-			angle& a2 = AngleParmVector[j];
+			Angle& a2 = angleParmVector[j];
 
 			string t1 = a2.at1;
 			string t2 = a2.at2;

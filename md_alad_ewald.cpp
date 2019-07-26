@@ -4,7 +4,6 @@
 #include <sstream>
 #include <cmath>
 #include <iomanip>
-#include <vector>
 #include <ctime>
 #include <random>
 #include "common.hpp"
@@ -13,6 +12,7 @@
 #include "Atom.hpp"
 #include "PSF.hpp"
 #include "PDB.hpp"
+#include "LoadParm.hpp"
 #include "Option.hpp"
 #include "System.hpp"
 #include "Energy.hpp"
@@ -45,6 +45,11 @@ int main (int argc, char** argv)
 	PDB PDBFile(sys.coordinates);
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
+
+	LoadParm ALL22(sys.parameters);
+	if (!PSFFile.set_bond_parm(ALL22.bondParmVector)) return 0;
+	if (!PSFFile.set_angle_parm(ALL22.angleParmVector)) return 0;
+	if (!PSFFile.set_lj_parm(ALL22.LJParmVector)) return 0;
 
 	Energy     ene(opt, &atomVector, &sys);
 	Integrator job(opt, &atomVector);
