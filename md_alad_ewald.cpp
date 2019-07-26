@@ -15,22 +15,12 @@
 #include "PDB.hpp"
 #include "Option.hpp"
 #include "System.hpp"
+#include "Energy.hpp"
 #include "Lattice.hpp"
 using namespace std;
-class Energy
-{
-	public:
-	double es, lj;
-
-	Energy()
-	{
-		es = 0.;
-		lj = 0.;
-	}
-};
 void print_ene(int istep, Energy& ene, double K, int nfree);
 bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
-void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, vector<Eigen::Vector3d>& g);
+void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g);
 double calc_kin(vector<Atom>& atomVector);
 void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g);
 void output(ofstream& fo, vector<Atom>& atomVector, System& sys);
@@ -51,6 +41,7 @@ int main (int argc, char** argv)
 		return 1;
 
 	System sys(opt);
+	Energy ene(opt);
 
 	mt19937 engine(static_cast<unsigned int>(sys.iseed));
 	normal_distribution<double> dist(0., 1.);
@@ -61,13 +52,11 @@ int main (int argc, char** argv)
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
 
-	Energy ene;
-
 	const int natom = atomVector.size();
 	const int nwat  = natom / 3;
 	const int nfree = natom * 3 - nwat * 3;
 
-	const int print_energy_step = sys.outputEnergies;
+	const int print_energy_step = ene.outputEnergies;
 	const int print_trj_step    = sys.DCDFreq;
 	const int nstep             = sys.nstep;
 
@@ -101,7 +90,7 @@ int main (int argc, char** argv)
 	Eigen::Vector3d g2 = sys.lattice._g2();
 	Eigen::Vector3d g3 = sys.lattice._g3();
 	vector<Eigen::Vector3d> g;
-	int kmax = sys.ewald_kmax;
+	int kmax = ene.ewald_kmax;
 	int sqkmax = kmax - 1;
 	sqkmax *= sqkmax;
 	double dum = 0;
@@ -123,7 +112,7 @@ int main (int argc, char** argv)
 	{	
 		ew_self += atomVector[i].charge * atomVector[i].charge;
 	}
-	ew_self *= -sys.ewcoeff / SQRTPI * COULOMB;
+	ew_self *= -ene.ewcoeff / SQRTPI * COULOMB;
 
 
 	int icnt = 0;
@@ -147,7 +136,7 @@ int main (int argc, char** argv)
 	ene.es += ew_self;
 	print_ene(0, ene, Ktmp, nfree);
 
-	calc_frc(atomVector, lj_pair_list, el_pair_list, sys, g);
+	calc_frc(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
 	for (int i = 0; i < atomVector.size(); i++)
 	{
 		Atom& at = atomVector[i];
@@ -160,7 +149,7 @@ int main (int argc, char** argv)
 
 	for (int istep = 1; istep <= nstep; istep++)
 	{
-		calc_frc(atomVector, lj_pair_list, el_pair_list, sys, g);
+		calc_frc(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
 		for (int i = 0; i < atomVector.size(); i++)
 		{
 			Eigen::Vector3d
@@ -285,11 +274,11 @@ double calc_kin(vector<Atom>& atomVector)
 	return k * 0.5;
 }
 
-void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, vector<Eigen::Vector3d>& g)
+void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g)
 {
-	static double cutoff   = sys.cutoff;
+	static double cutoff   = ene.cutoff;
 	static double cutoff2  = cutoff * cutoff;
-	static double ewcoeff  = sys.ewcoeff;
+	static double ewcoeff  = ene.ewcoeff;
 	static double ewcoeff2 = ewcoeff * ewcoeff;
 	static double boxsize  = sys.box_size_x;
 	static double factor = 1. / (4. * ewcoeff * ewcoeff);
@@ -415,10 +404,10 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 
 void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g)
 {
-	static double cutoff = sys.cutoff;
+	static double cutoff = ene.cutoff;
 	static double cutoff2 = cutoff * cutoff;
 	static double boxsize = sys.box_size_x;
-	static double ewcoeff = sys.ewcoeff;
+	static double ewcoeff = ene.ewcoeff;
 	static double factor = 1. / (4. * ewcoeff * ewcoeff);
 	static double const_recipro = 4. * PI / sys.lattice.volume();
 	static double A = 582. * 1e3;

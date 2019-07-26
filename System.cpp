@@ -20,7 +20,6 @@ System::System(const Option& opt)
 	this->nstep              = opt.nstep;
 	this->firsttimestep      = opt.firsttimestep;
 	this->DCDFreq            = opt.DCDFreq;
-	this->outputEnergies     = opt.outputEnergies;
 
 	this->initialTemp        = opt.initialTemp;
 
@@ -34,16 +33,6 @@ System::System(const Option& opt)
 	this->box_size_x         = opt.box_size_x;
 	this->box_size_y         = opt.box_size_y;
 	this->box_size_z         = opt.box_size_z;
-
-	this->cutoff             = opt.cutoff;
-
-	this->usePME             = opt.usePME;
-	this->ewald_kmax         = opt.ewald_kmax;
-	this->pme_grid_x         = opt.pme_grid_x;
-	this->pme_grid_y         = opt.pme_grid_y;
-	this->pme_grid_z         = opt.pme_grid_z;
-	this->pme_spline_order   = opt.pme_spline_order;
-	this->ewald_tolerance    = opt.ewald_tolerance;
 
 	this->iseed              = opt.iseed;
 
@@ -72,10 +61,6 @@ void System::show_simulation_info()
                 << '\n'
                 << "REMARK NUMBER OF STEPS        " << this->nstep
                 << '\n';
-
-	cout 
-		<< "REMARK CUTOFF                 " << this->cutoff
-		<< '\n';
 
 	cout
                 << "REMARK COORDINATE PDB         " << this->coordinates

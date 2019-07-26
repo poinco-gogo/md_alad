@@ -14,7 +14,7 @@ class System
 	std::string structure, coordinates, parameters, topparfile,
 		outputname,
 		bincoordinates, binvelocities;
-        int nstep, firsttimestep, DCDFreq, outputEnergies;
+        int nstep, firsttimestep, DCDFreq;
 
         double initialTemp;
 
@@ -24,13 +24,6 @@ class System
 
 	std::string boundaryType, wrapAll;
 	double box_size_x, box_size_y, box_size_z;
-
-	double cutoff;
-
-	std::string usePME;
-	int ewald_kmax, pme_grid_x, pme_grid_y, pme_grid_z, pme_spline_order;
-	double ewald_tolerance;
-	const double ewcoeff = 0.39467;
 
 	int iseed;
 
