@@ -8,8 +8,10 @@
 #include "common.hpp"
 using namespace std;
 
-Energy::Energy(const Option& opt)
+Energy::Energy(const Option& opt, vector<Atom>* ptr_atomVector)
 {
+	this->ptr_atomVector     = ptr_atomVector;
+
 	this->outputEnergies     = opt.outputEnergies;
 
 	this->cutoff             = opt.cutoff;
@@ -30,11 +32,11 @@ void Energy::show_simulation_info()
 		<< '\n';
 }
 
-void Energy::calc_kinetic(vector<Atom>& atomVector)
+void Energy::calc_kinetic_energy()
 {
 	this->kinetic = 0;
 
-	for (auto& atom: atomVector)
+	for (auto& atom: *ptr_atomVector)
 	{
 		this->kinetic += atom.mass * atom.vnew.squaredNorm();
 	}

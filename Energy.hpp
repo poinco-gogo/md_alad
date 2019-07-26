@@ -20,13 +20,15 @@ class Energy
 	double ewald_tolerance;
 	const double ewcoeff = 0.39467;
 
-	Energy(const Option& opt);
+	Energy(const Option& opt, std::vector<Atom>* ptr_atomVector);
 
 	double es, lj, kinetic;
 
-	void calc_kinetic(std::vector<Atom>& atomVector);
+	void calc_kinetic_energy();
 
 	private:
 	void show_simulation_info();
+
+	std::vector<Atom>* ptr_atomVector;
 };
 #endif

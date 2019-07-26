@@ -40,7 +40,6 @@ int main (int argc, char** argv)
 		return 1;
 
 	System     sys(opt);
-	Energy     ene(opt);
 
 	mt19937 engine(static_cast<unsigned int>(sys.iseed));
 	normal_distribution<double> dist(0., 1.);
@@ -51,6 +50,7 @@ int main (int argc, char** argv)
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
 
+	Energy     ene(opt, &atomVector);
 	Integrator job(opt, &atomVector);
 	job.set_ptr_engine(&engine);
 
@@ -110,7 +110,7 @@ int main (int argc, char** argv)
 	make_shake_pair(atomVector, shake_list);
 
 	calc_pot(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
-	ene.calc_kinetic(atomVector);
+	ene.calc_kinetic_energy();
 	ene.es += ew_self;
 	out.print_energy(0);
 
@@ -147,7 +147,7 @@ int main (int argc, char** argv)
 			at.vnew = 0.5 / job.dt * (at.rnew - at.rold);
 		}
 
-		ene.calc_kinetic(atomVector);
+		ene.calc_kinetic_energy();
 		calc_pot(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
 		ene.es += ew_self;
 		if (istep % print_energy_step== 0)
