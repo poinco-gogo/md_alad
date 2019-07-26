@@ -42,7 +42,7 @@ void PSF::read_PSF()
 		loc = s.find("NATOM", 0);
 		if (loc != string::npos) 
 		{
-			istringstream is(s.substr(0, 8);
+			istringstream is(s.substr(0, 8));
 			is >> natom;
 			get_atom_list(natom, fi); 
 		}

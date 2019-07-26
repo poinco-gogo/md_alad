@@ -24,14 +24,14 @@ bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
 void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
 int main (int argc, char** argv)
 {
-	if (argc < 4)
+	if (argc < 3)
 	{
-		cout << "usage: ./a.out trjout psf pdb config\n";
+		cout << "usage: ./a.out trjout config\n";
 		return 1;
 	}
 	
 	ofstream fo(argv[1]);
-	Option opt(argv[4]);
+	Option opt(argv[2]);
 	if (!opt.load_config())
 		return 1;
 
@@ -41,8 +41,8 @@ int main (int argc, char** argv)
 	normal_distribution<double> dist(0., 1.);
 
 	vector<Atom> atomVector;
-	PSF PSFFile(argv[2], &atomVector);
-	PDB PDBFile(argv[3]);
+	PSF PSFFile(sys.structure, &atomVector);
+	PDB PDBFile(sys.coordinates);
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
 
