@@ -40,6 +40,12 @@ void Option::reset()
 	ewald_tolerance  = 1e-6;
 
 	iseed = -1;
+
+	dt_fs              = 0.5;
+
+	langevinTemp       = 300;
+	langevinDamping_ps = 0.5;
+	langevin           = "off";
 }
 
 bool Option::load_config()
@@ -175,6 +181,22 @@ bool Option::load_config()
 		else if (s.find("wrapAll", 0) != string::npos)
 		{
 			is >> stmp >> this->wrapAll;
+		}
+		else if (s.find("timestep", 0) != string::npos)
+		{
+			is >> stmp >> this->dt_fs;
+		}
+		else if (s.find("langevinTemp", 0) != string::npos)
+		{
+			is >> stmp >> this->langevinTemp;
+		}
+		else if (s.find("langevinDamping", 0) != string::npos)
+		{
+			is >> stmp >> this->langevinDamping_ps;
+		}
+		else if (s.find("langevin", 0) != string::npos)
+		{
+			is >> stmp >> this->langevin;
 		}
 		else
 		{

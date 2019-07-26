@@ -9,9 +9,6 @@ class Option
 	
 	Option(std::string filename);
 	bool load_config();
-
-	private:
-
 	void reset();
 
 	std::string filename;
@@ -36,5 +33,10 @@ class Option
 	double ewald_tolerance;
 
 	int iseed;
+
+	double dt_fs;
+
+	double langevinTemp, langevinDamping_ps;
+	std::string langevin;
 };
 #endif

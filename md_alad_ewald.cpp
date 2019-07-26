@@ -12,46 +12,31 @@
 #include "Atom.hpp"
 #include "PSF.hpp"
 #include "PDB.hpp"
+#include "Option.hpp"
+#include "System.hpp"
 #include "Lattice.hpp"
 using namespace std;
 double gauss();
-class System
+class Energy
 {
 	public:
-	int nstep, natom, kmax;
-	double dt, T, gamma, boxsize, cutoff, volume, ewcoeff, lj, es;
-	Eigen::Vector3d origin;
-	Lattice lattice;
+	double es, lj;
 
-	System()
+	Energy()
 	{
-		dt = 9999;
-		T = 9999;
-		gamma = 9999;
-		nstep = 0;
-		natom = 0;
-		boxsize = 1;
-		origin.x() = 9999; origin.y() = 9999; origin.z() = 9999;
-		cutoff = 1.;
-		lj = 0;
-		es = 0;
-	}
-
-	void setup_box()
-	{
-		volume = boxsize * boxsize * boxsize;
+		es = 0.;
+		lj = 0.;
 	}
 };
-void print_ene(int istep, System& system, double K, int nfree);
+void print_ene(int istep, Energy& ene, double K, int nfree);
 bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
-void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g);
+void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, vector<Eigen::Vector3d>& g);
 double calc_kin(vector<Atom>& atomVector);
-void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g);
-void output(ofstream& fo, vector<Atom>& atomVector, System& system);
+void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g);
+void output(ofstream& fo, vector<Atom>& atomVector, System& sys);
 void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list);
 void make_el_pair(vector<Atom>& atomVector, vector<int>& el_pair_list);
 void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
-bool load_config(ifstream& fi, System& system);
 int main (int argc, char** argv)
 {
 	if (argc < 4)
@@ -63,32 +48,35 @@ int main (int argc, char** argv)
 	srand( (unsigned int)time(NULL) );
 	
 	ofstream fo(argv[1]);
-	ifstream fp(argv[3]);
-	ifstream fc(argv[4]);
-	System system;
-	if (!load_config(fc, system))
+	Option opt(argv[4]);
+	if (!opt.load_config())
 		return 1;
+
+	System sys(opt);
+
 	vector<Atom> atomVector;
 	PSF PSFFile(argv[2], &atomVector);
 	PDB PDBFile(argv[3]);
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
 
+	Energy ene;
+
 	const int natom = atomVector.size();
 	const int nwat  = natom / 3;
 	const int nfree = natom * 3 - nwat * 3;
 
-	int print_energy_step = 1;
-	int print_trj_step  = 1;
-	int nstep = system.nstep;
+	const int print_energy_step = sys.outputEnergies;
+	const int print_trj_step    = sys.DCDFreq;
+	const int nstep             = sys.nstep;
 
-        const double dt_ps = system.dt * 0.001; // in ps
-        const double gamma_ps = system.gamma; // in ps-1
+        const double dt_ps = sys.dt_fs * 0.001; // in ps
+        const double gamma_ps = sys.langevinDamping_ps; // in ps-1
         const double dt = dt_ps * PS2ASU;
         const double gamma = gamma_ps / PS2ASU;
 	const double dt_div2 = dt * 0.5;
 	const double dtdt_div2 = dt * dt * 0.5;
-	const double  T = system.T; // K
+	const double  T = sys.langevinTemp; // K
         const double A = 1. - gamma * dt * 0.5;
         const double B = 1. + gamma * dt * 0.5;
         const double inB = 1. / B;
@@ -105,17 +93,14 @@ int main (int argc, char** argv)
 	cout << "REMARK dt[fs] " << dt_ps * 1e3 << '\n';
 	cout << "REMARK gamma[ps-1] " << gamma_ps << '\n';
 	cout << "REMARK T[K] " << T << '\n';
-	cout << "REMARK Cutoff[ang.] " << system.cutoff << '\n';
-
-	const double rOH  = 0.9572;
-	const double aHOH = 104.52 / 180. * acos(-1.0);
+	//cout << "REMARK Cutoff[ang.] " << system.cutoff << '\n';
 
 	// make reciprocal vectors
-	Eigen::Vector3d g1 = system.lattice._g1();
-	Eigen::Vector3d g2 = system.lattice._g2();
-	Eigen::Vector3d g3 = system.lattice._g3();
+	Eigen::Vector3d g1 = sys.lattice._g1();
+	Eigen::Vector3d g2 = sys.lattice._g2();
+	Eigen::Vector3d g3 = sys.lattice._g3();
 	vector<Eigen::Vector3d> g;
-	int kmax = system.kmax;
+	int kmax = sys.ewald_kmax;
 	int sqkmax = kmax - 1;
 	sqkmax *= sqkmax;
 	double dum = 0;
@@ -137,7 +122,7 @@ int main (int argc, char** argv)
 	{	
 		ew_self += atomVector[i].charge * atomVector[i].charge;
 	}
-	ew_self *= -system.ewcoeff / SQRTPI * COULOMB;
+	ew_self *= -sys.ewcoeff / SQRTPI * COULOMB;
 
 
 	int icnt = 0;
@@ -149,19 +134,19 @@ int main (int argc, char** argv)
 		at.velocity.z() = gauss() * sqrt(BOLTZMAN * T / at.mass);
 	}
 	
-	output(fo, atomVector, system);
+	output(fo, atomVector, sys);
 
 	vector<int> lj_pair_list, el_pair_list, shake_list;
 	make_lj_pair(atomVector, lj_pair_list);
 	make_el_pair(atomVector, el_pair_list);
 	make_shake_pair(atomVector, shake_list);
 
-	calc_pot(atomVector, lj_pair_list, el_pair_list, system, g);
+	calc_pot(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
 	double Ktmp = calc_kin(atomVector);
-	system.es += ew_self;
-	print_ene(0, system, Ktmp, nfree);
+	ene.es += ew_self;
+	print_ene(0, ene, Ktmp, nfree);
 
-	calc_frc(atomVector, lj_pair_list, el_pair_list, system, g);
+	calc_frc(atomVector, lj_pair_list, el_pair_list, sys, g);
 	for (int i = 0; i < atomVector.size(); i++)
 	{
 		Atom& at = atomVector[i];
@@ -174,7 +159,7 @@ int main (int argc, char** argv)
 
 	for (int istep = 1; istep <= nstep; istep++)
 	{
-		calc_frc(atomVector, lj_pair_list, el_pair_list, system, g);
+		calc_frc(atomVector, lj_pair_list, el_pair_list, sys, g);
 		for (int i = 0; i < atomVector.size(); i++)
 		{
 			Eigen::Vector3d noise( gauss(), gauss(), gauss());
@@ -201,14 +186,14 @@ int main (int argc, char** argv)
 		}
 
 		double K = calc_kin(atomVector);
-		calc_pot(atomVector, lj_pair_list, el_pair_list, system, g);
-		system.es += ew_self;
+		calc_pot(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
+		ene.es += ew_self;
 		if (istep % print_energy_step== 0)
-			print_ene(istep, system, K, nfree);
+			print_ene(istep, ene, K, nfree);
 
 		if (istep % print_trj_step== 0)
 		{
-			output(fo, atomVector, system);
+			output(fo, atomVector, sys);
 		}
 
 		for (int i = 0; i < atomVector.size(); i++)
@@ -223,14 +208,14 @@ int main (int argc, char** argv)
 /////////////////////////  end of main program
 
 
-void print_ene(int istep, System& system, double K, int nfree)
+void print_ene(int istep, Energy& ene, double K, int nfree)
 {
-	double totpot = system.es + system.lj;
+	double totpot = ene.es + ene.lj;
 	cout 
 		<< setprecision(4) << fixed
 		<< setw(12) << istep
-		<< setw(16) << system.lj
-		<< setw(16) << system.es
+		<< setw(16) << ene.lj
+		<< setw(16) << ene.es
 		<< setw(16) << totpot
 		<< setw(16) << K
 		<< setw(16) << totpot + K
@@ -298,16 +283,16 @@ double calc_kin(vector<Atom>& atomVector)
 	return k * 0.5;
 }
 
-void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g)
+void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, vector<Eigen::Vector3d>& g)
 {
-	static double cutoff   = system.cutoff;
+	static double cutoff   = sys.cutoff;
 	static double cutoff2  = cutoff * cutoff;
-	static double ewcoeff  = system.ewcoeff;
+	static double ewcoeff  = sys.ewcoeff;
 	static double ewcoeff2 = ewcoeff * ewcoeff;
-	static double boxsize  = system.boxsize;
+	static double boxsize  = sys.box_size_x;
 	static double factor = 1. / (4. * ewcoeff * ewcoeff);
 	static double const_intra   = -2. * ewcoeff / SQRTPI;
-	static double const_recipro = 4. * PI / system.volume;
+	static double const_recipro = 4. * PI / sys.lattice.volume();
 	static double A = 582. * 1e3;
 	static double A_2 = A * 2.;
 	static double B = 595.0;
@@ -324,7 +309,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		{
 			Atom& at2 = atomVector[lj_pair_list[j]];
 			Eigen::Vector3d del
-			= system.lattice.delta(at1.position ,at2.position);
+			= sys.lattice.delta(at1.position ,at2.position);
 			double r2 = (del).squaredNorm();
 			if (r2 > cutoff2) continue;
 			double r6 = r2 * r2 * r2;
@@ -346,7 +331,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at2 = atomVector[j + 1];
 		Atom& at3 = atomVector[j + 2];
 		Eigen::Vector3d del1
-			= system.lattice.delta(at1.position ,at2.position);
+			= sys.lattice.delta(at1.position ,at2.position);
 		double adel1 = del1.norm();
 		double sqadel1 = adel1 * adel1;
 		frc = at1.charge * at2.charge * COULOMB *
@@ -355,7 +340,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		at1.force -= frc;
 		at2.force += frc;
 		Eigen::Vector3d del2
-			= system.lattice.delta(at1.position ,at3.position);
+			= sys.lattice.delta(at1.position ,at3.position);
 		double adel2 = del2.norm();
 		double sqadel2 = adel2 * adel2;
 		frc = at1.charge * at3.charge * COULOMB *
@@ -364,7 +349,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		at1.force -= frc;
 		at3.force += frc;
 		Eigen::Vector3d del3
-			= system.lattice.delta(at3.position ,at2.position);
+			= sys.lattice.delta(at3.position ,at2.position);
 		double adel3 = del3.norm();
 		double sqadel3 = adel3 * adel3;
 		frc = at3.charge * at2.charge * COULOMB *
@@ -382,7 +367,7 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at2 = atomVector[el_pair_list[2 * i + 1]];
 
 		Eigen::Vector3d del
-			= system.lattice.delta(at1.position ,at2.position);
+			= sys.lattice.delta(at1.position ,at2.position);
 		double r2 = del.squaredNorm();
 		if (r2 > cutoff2) continue;
 		double r = sqrt(r2);
@@ -426,21 +411,21 @@ void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 //	print(atomVector[0].fnew);
 }
 
-void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& system, vector<Eigen::Vector3d>& g)
+void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g)
 {
-	static double cutoff = system.cutoff;
+	static double cutoff = sys.cutoff;
 	static double cutoff2 = cutoff * cutoff;
-	static double boxsize = system.boxsize;
-	static double ewcoeff = system.ewcoeff;
+	static double boxsize = sys.box_size_x;
+	static double ewcoeff = sys.ewcoeff;
 	static double factor = 1. / (4. * ewcoeff * ewcoeff);
-	static double const_recipro = 4. * PI / system.volume;
+	static double const_recipro = 4. * PI / sys.lattice.volume();
 	static double A = 582. * 1e3;
 	static double B = 595.0;
 	static double qO = -0.834;
 	static double qH = 0.417;
 
-	system.lj = 0;
-	system.es = 0;
+	ene.lj = 0;
+	ene.es = 0;
 	double ew_direct  = 0;
 	double ew_recipro = 0;
 	double ew_intra   = 0;
@@ -453,11 +438,11 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		{
 			Atom& jat = atomVector[lj_pair_list[j]];
 			Eigen::Vector3d del
-			= system.lattice.delta(iat.position ,jat.position);
+			= sys.lattice.delta(iat.position ,jat.position);
 			double roo2 = del.squaredNorm();
 			if (roo2 > cutoff2) continue;
 			double roo6 = roo2 * roo2 * roo2;
-			system.lj += A / (roo6 * roo6) - B / roo6;
+			ene.lj += A / (roo6 * roo6) - B / roo6;
 		}
 	}
 
@@ -469,13 +454,13 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at2 = atomVector[j + 1];
 		Atom& at3 = atomVector[j + 2];
 		Eigen::Vector3d del1
-			= system.lattice.delta(at1.position ,at2.position);
+			= sys.lattice.delta(at1.position ,at2.position);
 		double adel1 = del1.norm();
 		Eigen::Vector3d del2
-			= system.lattice.delta(at1.position ,at3.position);
+			= sys.lattice.delta(at1.position ,at3.position);
 		double adel2 = del2.norm();
 		Eigen::Vector3d del3
-			= system.lattice.delta(at3.position ,at2.position);
+			= sys.lattice.delta(at3.position ,at2.position);
 		double adel3 = del3.norm();
 		ew_intra += at1.charge*at2.charge*erfl(ewcoeff*adel1)/adel1;
 		ew_intra += at1.charge*at3.charge*erfl(ewcoeff*adel2)/adel2;
@@ -489,7 +474,7 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 		Atom& at2 = atomVector[el_pair_list[2 * i + 1]];
 
 		Eigen::Vector3d del
-			= system.lattice.delta(at1.position ,at2.position);
+			= sys.lattice.delta(at1.position ,at2.position);
 		double r = del.norm();
 		if (r > cutoff) continue;
 		ew_direct += at1.charge * at2.charge * erfc(ewcoeff*r)/r;
@@ -524,13 +509,13 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 //	cout << "el_intra    " << el_intra * 332.0636 << '\n';
 //	cout << "el_recipro " << el_recipro * 332.0636<< '\n';
 
-	system.es += ew_direct + ew_recipro - ew_intra;
-	system.es *= COULOMB;
+	ene.es += ew_direct + ew_recipro - ew_intra;
+	ene.es *= COULOMB;
 }
 
-void output(ofstream& fo, vector<Atom>& atomVector, System& system)
+void output(ofstream& fo, vector<Atom>& atomVector, System& sys)
 {
-	static const double boxsize = system.boxsize;
+	static const double boxsize = sys.box_size_x;
 	fo << atomVector.size() << '\n' << '\n';
 	fo << setprecision(6) << fixed;
 	for (int i = 0; i < atomVector.size() / 3; i++) 
@@ -620,70 +605,4 @@ void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list)
 		shake_list.push_back(j+1);
 		shake_list.push_back(j+2);
 	}
-}
-
-bool load_config(ifstream& fc, System& system)
-{
-	string s;
-	while (getline(fc, s))
-	{
-		istringstream is(s);
-		string stmp;
-		if (s.find("#", 0) != string::npos)
-		{
-			// found comment line.
-			continue;
-		}
-		else if (s.find("dt", 0) != string::npos)
-		{
-			is >> stmp >> system.dt;
-		}
-		else if (s.find("temperature", 0) != string::npos)
-		{
-			is >> stmp >> system.T;
-		}
-		else if (s.find("gamma", 0) != string::npos)
-		{
-			is >> stmp >> system.gamma;
-		}
-		else if (s.find("numstep", 0) != string::npos)
-		{
-			is >> stmp >> system.nstep;
-		}
-		else if (s.find("boxsize", 0) != string::npos)
-		{
-			is >> stmp >> system.boxsize;
-			system.setup_box();
-		}
-		else if (s.find("origin", 0) != string::npos)
-		{
-			is >> stmp >> system.origin.x()
-				>> system.origin.y()
-				>> system.origin.z();
-		}
-		else if (s.find("cutoff", 0) != string::npos)
-		{
-			is >> stmp >> system.cutoff;
-		}
-		else if (s.find("ewcoeff", 0) != string::npos)
-		{
-			is >> stmp >> system.ewcoeff;
-		}
-		else if (s.find("kmax", 0) != string::npos)
-		{
-			is >> stmp >> system.kmax;
-		}
-		else 
-		{
-			is >> stmp;
-			cerr << "unknown config param \"" << stmp
-				<< "\" found.\n";
-			return false;
-		}
-	}
-
-	Lattice ltmp(system.boxsize, system.boxsize, system.boxsize);
-	system.lattice = ltmp;
-
-	return true;
 }
