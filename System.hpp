@@ -43,5 +43,9 @@ class System
 	void make_lattice(double x, double y, double z);
 	void make_solute_index(std::vector<Atom>& atomVector);
 	void make_water_index(std::vector<Atom>& atomVector);
+
+	public:
+
+	int nfree;
 };
 #endif

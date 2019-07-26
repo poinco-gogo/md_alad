@@ -16,14 +16,12 @@
 #include "Option.hpp"
 #include "System.hpp"
 #include "Energy.hpp"
+#include "Output.hpp"
 #include "Lattice.hpp"
 using namespace std;
-void print_ene(int istep, Energy& ene, double K, int nfree);
 bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
 void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g);
-double calc_kin(vector<Atom>& atomVector);
 void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g);
-void output(ofstream& fo, vector<Atom>& atomVector, System& sys);
 void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list);
 void make_el_pair(vector<Atom>& atomVector, vector<int>& el_pair_list);
 void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
@@ -52,9 +50,12 @@ int main (int argc, char** argv)
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
 
+	Output out(&atomVector, &sys, &ene);
+
 	const int natom = atomVector.size();
 	const int nwat  = natom / 3;
 	const int nfree = natom * 3 - nwat * 3;
+	sys.nfree = nfree;
 
 	const int print_energy_step = ene.outputEnergies;
 	const int print_trj_step    = sys.DCDFreq;
@@ -124,7 +125,7 @@ int main (int argc, char** argv)
 		at.velocity.z() = dist(engine) * sqrt(BOLTZMAN * T / at.mass);
 	}
 	
-	output(fo, atomVector, sys);
+	//output(fo, atomVector, sys);
 
 	vector<int> lj_pair_list, el_pair_list, shake_list;
 	make_lj_pair(atomVector, lj_pair_list);
@@ -132,9 +133,9 @@ int main (int argc, char** argv)
 	make_shake_pair(atomVector, shake_list);
 
 	calc_pot(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
-	double Ktmp = calc_kin(atomVector);
+	ene.calc_kinetic(atomVector);
 	ene.es += ew_self;
-	print_ene(0, ene, Ktmp, nfree);
+	out.print_energy(0);
 
 	calc_frc(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
 	for (int i = 0; i < atomVector.size(); i++)
@@ -176,15 +177,15 @@ int main (int argc, char** argv)
 			at.vnew = 0.5 / dt * (at.rnew - at.rold);
 		}
 
-		double K = calc_kin(atomVector);
+		ene.calc_kinetic(atomVector);
 		calc_pot(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
 		ene.es += ew_self;
 		if (istep % print_energy_step== 0)
-			print_ene(istep, ene, K, nfree);
+			out.print_energy(istep);
 
 		if (istep % print_trj_step== 0)
 		{
-			output(fo, atomVector, sys);
+			out.output_xyz(fo);
 		}
 
 		for (int i = 0; i < atomVector.size(); i++)
@@ -197,22 +198,6 @@ int main (int argc, char** argv)
 	}
 }
 /////////////////////////  end of main program
-
-
-void print_ene(int istep, Energy& ene, double K, int nfree)
-{
-	double totpot = ene.es + ene.lj;
-	cout 
-		<< setprecision(4) << fixed
-		<< setw(12) << istep
-		<< setw(16) << ene.lj
-		<< setw(16) << ene.es
-		<< setw(16) << totpot
-		<< setw(16) << K
-		<< setw(16) << totpot + K
-		<< setw(16) << K * 2. / nfree * INVBOLTZMAN
-		<< '\n';
-}
 
 bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 {
@@ -261,17 +246,6 @@ bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 	}
 
 	return true;
-}
-
-double calc_kin(vector<Atom>& atomVector)
-{
-	double k = 0;
-	for (int i = 0; i < atomVector.size(); i++)
-	{
-		Atom& at = atomVector[i];
-		k += at.mass * (at.vnew).squaredNorm();
-	}
-	return k * 0.5;
 }
 
 void calc_frc(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& el_pair_list, System& sys, Energy& ene, vector<Eigen::Vector3d>& g)
@@ -502,43 +476,6 @@ void calc_pot(vector<Atom>& atomVector, vector<int>& lj_pair_list, vector<int>& 
 
 	ene.es += ew_direct + ew_recipro - ew_intra;
 	ene.es *= COULOMB;
-}
-
-void output(ofstream& fo, vector<Atom>& atomVector, System& sys)
-{
-	static const double boxsize = sys.box_size_x;
-	fo << atomVector.size() << '\n' << '\n';
-	fo << setprecision(6) << fixed;
-	for (int i = 0; i < atomVector.size() / 3; i++) 
-	{
-		int j = 3 * i;
-		Atom& at1 = atomVector[j];
-		Atom& at2 = atomVector[j + 1];
-		Atom& at3 = atomVector[j + 2];
-		Eigen::Vector3d p1 = at1.position;
-		Eigen::Vector3d p2 = at2.position;
-		Eigen::Vector3d p3 = at3.position;
-		Eigen::Vector3d vcom = (p1 + p2 + p3) / 3.;
-
-		double d = floor(0.5 + vcom.x() / boxsize);
-		p1.x() -= boxsize * d;
-		p2.x() -= boxsize * d;
-		p3.x() -= boxsize * d;
-		
-		d = floor(0.5 + vcom.y() / boxsize);
-		p1.y() -= boxsize * d;
-		p2.y() -= boxsize * d;
-		p3.y() -= boxsize * d;
-		
-		d = floor(0.5 + vcom.z() / boxsize);
-		p1.z() -= boxsize * d;
-		p2.z() -= boxsize * d;
-		p3.z() -= boxsize * d;
-
-		fo << " " << at1.PDBAtomName[0] << setw(20) << p1.x() << setw(20) << p1.y() << setw(20) << p1.z() << '\n';
-		fo << " " << at2.PDBAtomName[0] << setw(20) << p2.x() << setw(20) << p2.y() << setw(20) << p2.z() << '\n';
-		fo << " " << at3.PDBAtomName[0] << setw(20) << p3.x() << setw(20) << p3.y() << setw(20) << p3.z() << '\n';
-	}
 }
 
 void make_lj_pair(vector<Atom>& atomVector, vector<int>& lj_pair_list)

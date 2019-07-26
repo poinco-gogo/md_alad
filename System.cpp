@@ -46,6 +46,8 @@ System::System(const Option& opt)
 	{
 		make_lattice(box_size_x, box_size_y, box_size_z);
 	}
+
+	this->nfree = 0;
 }
 
 void System::make_lattice(double x, double y, double z)

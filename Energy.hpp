@@ -22,7 +22,9 @@ class Energy
 
 	Energy(const Option& opt);
 
-	double es, lj;
+	double es, lj, kinetic;
+
+	void calc_kinetic(std::vector<Atom>& atomVector);
 
 	private:
 	void show_simulation_info();

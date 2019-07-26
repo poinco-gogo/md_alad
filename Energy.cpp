@@ -29,3 +29,15 @@ void Energy::show_simulation_info()
 		<< "REMARK CUTOFF                 " << this->cutoff
 		<< '\n';
 }
+
+void Energy::calc_kinetic(vector<Atom>& atomVector)
+{
+	this->kinetic = 0;
+
+	for (auto& atom: atomVector)
+	{
+		this->kinetic += atom.mass * atom.vnew.squaredNorm();
+	}
+
+	this->kinetic *= 0.5;
+}
