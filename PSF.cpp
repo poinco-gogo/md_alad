@@ -34,7 +34,7 @@ void PSF::read_PSF()
 		return;
 	}
 
-	int loc;
+	int loc, ncnt;
 	string s;
 	
 	while ( getline(fi, s) )
@@ -42,10 +42,25 @@ void PSF::read_PSF()
 		loc = s.find("NATOM", 0);
 		if (loc != string::npos) 
 		{
-			istringstream is;
-			is.str(s.substr(0, 8)); // number of atoms in system
+			istringstream is(s.substr(0, 8);
 			is >> natom;
 			get_atom_list(natom, fi); 
+		}
+
+		loc = s.find("NBOND", 0);
+		if (loc != string::npos)
+		{
+			istringstream is(s.substr(0, 8));
+			is >> ncnt;
+			get_bond_list(ncnt, fi);
+		}
+
+		loc = s.find("NTHETA", 0);
+		if (loc != string::npos)
+		{
+			istringstream is(s.substr(0, 8));
+			is >> ncnt;
+			get_angle_list(ncnt, fi);
 		}
 	}
 
@@ -79,6 +94,197 @@ void PSF::get_atom_list(const int natom, ifstream& fi)
 		atom.invmass = 1. / atom.mass;
 	}
 }
+
+void PSF::get_bond_list(const int nbond, ifstream& fi)
+{
+	cout << "REMARK NUMBER OF BOND FROM PSF : " << nbond << '\n';
+
+	string s;
+
+	while ( getline(fi, s) && s != "" )
+	{
+		istringstream is(s);
+		int b;
+		while (is >> b)
+		{
+			bondArray.push_back(b);
+		}
+	}
+	if (bondArray.size() / 2 != nbond)
+	{
+		die("somethig is wrong with PSF::get_bond_list()");
+	}
+/*
+	// Debug      list all bond
+
+	for (int i = 0; i < nbond; i++)
+	{
+		cout << "REMARK  "
+		     << "bond no. " << i+1 << " / " << nbond << " "
+		     << bondArray[i*2] << " - " << bondArray[i*2 + 1] << " "
+		     << ptr_atomVector -> at(bondArray[i*2] - 1).PSFAtomName
+		     << " - "
+		     << ptr_atomVector -> at(bondArray[i*2 + 1] - 1).PSFAtomName << '\n';
+		if (ptr_atomVector -> at(bondArray[i * 2] - 1).PSFSegmentName == "WAT")
+			break;
+		num_nwt_bond++;
+
+	}
+	cout << "REMARK NUMBER OF BOND IN NON-WAT : " << num_nwt_bond << '\n';
+*/
+}  /*  end of func() get_bond_list  */
+
+bool PSF::set_bond_parm(vector<Bond>& bondParmVector)
+{
+	string iat1;
+	string iat2;
+	string jat1;
+	string jat2;
+
+	// now make bondVector
+	for (int i = 0; i < bondArray.size() / 2; i++)
+	{
+		iat1 = ptr_atomVector -> at(bondArray[i * 2    ] - 1).PSFAtomName;
+		iat2 = ptr_atomVector -> at(bondArray[i * 2 + 1] - 1).PSFAtomName;
+		for (int j = 0; j < bondParmVector.size(); j++)
+		{
+			jat1 = bondParmVector[j].at1;
+			jat2 = bondParmVector[j].at2;
+
+			if ((iat1 == jat1 && iat2 == jat2) || (iat1 == jat2 && iat2 == jat1))
+			{
+				Bond bond(
+				&ptr_atomVector -> at(bondArray[i * 2] - 1),
+				&ptr_atomVector -> at(bondArray[i * 2 + 1] - 1),
+				bondParmVector[j].Kb,
+				bondParmVector[j].b0);
+
+				// set flag
+				bond.set_flag_XH();
+
+				bondVector.push_back(bond);
+
+				break;
+			}
+
+			if (j == bondParmVector.size() - 1)
+			{
+				cerr
+				<< "error: bond parameter missing for:\n"
+				<< iat1 << " - " << iat2 << endl;
+				return false;
+			}
+		}
+	}
+
+	// remove all elements in bondArray
+	bondArray.clear();
+	// remove all parameters in BondParmArray
+	bondParmVector.clear();
+
+	cout << "REMARK Bond Parameters are successfully assigned.\n";
+	return true;
+
+} // end of func() set_bond_parm
+
+void PSF::get_angle_list(const int nangle, ifstream& fi)
+{
+	cout << "REMARK NUMBER OF ANGLE FROM PSF : " << nangle << '\n';
+
+	string s;
+
+	while ( getline(fi, s) && s != "" )
+	{
+		istringstream is(s);
+		int b;
+		while (is >> b)
+		{
+			angleArray.push_back(b);
+		}
+	}
+
+	/*  Debug      list all angle  */
+/*
+	for (int i = 0; i < nangle; i++)
+	{
+		cout << "REMARK  "
+		     << "angle no. " << i+1 << " / " << nangle << " "
+		     << angleArray[i*3] << " - "
+		     << angleArray[i*3 + 1] << " - "
+		     << angleArray[i*3 + 2] <<  " "
+		     << ptr_atomVector -> at(angleArray[i*3] - 1).PDBAtomName
+		     << " - "
+		     << ptr_atomVector -> at(angleArray[i*3 + 1] - 1).PDBAtomName
+		     << " - "
+		     << ptr_atomVector -> at(angleArray[i*3 + 2] - 1).PDBAtomName << '\n';
+	}
+*/
+
+} /* end of func() get_angle_list() */
+
+bool PSF::set_angle_parm(vector<Angle>& angleParmVector)
+{
+	string iat1;
+	string iat2;
+	string iat3;
+	string jat1;
+	string jat2;
+	string jat3;
+
+	// make AngleVector from parameters
+	for (int i = 0; i < angleArray.size() / 3; i++)
+	{
+		iat1 = ptr_atomVector -> at(angleArray[i * 3    ] - 1).PSFAtomName;
+		iat2 = ptr_atomVector -> at(angleArray[i * 3 + 1] - 1).PSFAtomName;
+		iat3 = ptr_atomVector -> at(angleArray[i * 3 + 2] - 1).PSFAtomName;
+		for (int j = 0; j < angleParmVector.size(); j++)
+		{
+			jat1 = angleParmVector[j].at1;
+			jat2 = angleParmVector[j].at2;
+			jat3 = angleParmVector[j].at3;
+
+			if ((iat2 == jat2) &&
+			((iat1 == jat1 && iat3 == jat3) || (iat1 == jat3 && iat3 == jat1)))
+			{
+				Angle angle(
+				&ptr_atomVector->at(angleArray[i * 3] - 1),
+				&ptr_atomVector->at(angleArray[i * 3 + 1] - 1),
+				&ptr_atomVector->at(angleArray[i * 3 + 2] - 1),
+				angleParmVector[j].Kt,
+				angleParmVector[j].t0,
+				angleParmVector[j].Kub,
+				angleParmVector[j].s0);
+
+				// set flag
+				//angle.set_flag_XH();
+
+				angleVector.push_back(angle);
+
+				break;
+			}
+
+			if (j == angleParmVector.size() - 1)
+			{
+				cerr << "error: angle parameter missing for: "
+					<< iat1 << " - " << iat2
+					<< " - " << iat3 << '\n';
+				return false;
+			}
+		}
+	}
+/*
+	cout << "DEBUG angle " << angleArray.size() / 3 << " should be "
+	<< AngleVector.size() << '\n';
+*/
+	// remove all elements in angleArray
+	angleArray.clear();
+	// remove all elements in AngleParmVector
+	angleParmVector.clear();
+
+	cout << "REMARK Angle Parameters are successfully assigned.\n";
+	return true;
+
+} // end of func() set_angle_parm
 
 void PSF::writePDB(string filename, string header, const vector<int>& indexVector)
 {
