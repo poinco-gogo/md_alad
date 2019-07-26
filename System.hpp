@@ -16,8 +16,6 @@ class System
 		bincoordinates, binvelocities;
         int nstep, firsttimestep, DCDFreq;
 
-        double initialTemp;
-
 	std::string rigidBonds, rigidIndexes;
         double rigidTolerance;
         int    rigidIterations;
@@ -26,11 +24,6 @@ class System
 	double box_size_x, box_size_y, box_size_z;
 
 	int iseed;
-
-	double dt_fs;
-
-	double langevinTemp, langevinDamping_ps;
-	std::string langevin;
 
 	Lattice lattice;
 

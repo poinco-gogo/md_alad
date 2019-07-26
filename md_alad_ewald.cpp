@@ -16,6 +16,7 @@
 #include "Option.hpp"
 #include "System.hpp"
 #include "Energy.hpp"
+#include "Integrator.hpp"
 #include "Output.hpp"
 #include "Lattice.hpp"
 using namespace std;
@@ -38,8 +39,8 @@ int main (int argc, char** argv)
 	if (!opt.load_config())
 		return 1;
 
-	System sys(opt);
-	Energy ene(opt);
+	System     sys(opt);
+	Energy     ene(opt);
 
 	mt19937 engine(static_cast<unsigned int>(sys.iseed));
 	normal_distribution<double> dist(0., 1.);
@@ -49,6 +50,9 @@ int main (int argc, char** argv)
 	PDB PDBFile(argv[3]);
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
+
+	Integrator job(opt, &atomVector);
+	job.set_ptr_engine(&engine);
 
 	Output out(&atomVector, &sys, &ene);
 
@@ -61,30 +65,12 @@ int main (int argc, char** argv)
 	const int print_trj_step    = sys.DCDFreq;
 	const int nstep             = sys.nstep;
 
-        const double dt_ps = sys.dt_fs * 0.001; // in ps
-        const double gamma_ps = sys.langevinDamping_ps; // in ps-1
-        const double dt = dt_ps * PS2ASU;
-        const double gamma = gamma_ps / PS2ASU;
-	const double dt_div2 = dt * 0.5;
-	const double dtdt_div2 = dt * dt * 0.5;
-	const double  T = sys.langevinTemp; // K
-        const double A = 1. - gamma * dt * 0.5;
-        const double B = 1. + gamma * dt * 0.5;
-        const double inB = 1. / B;
-	
 	cout << "REMARK Number of atoms " << natom << '\n';
-	for (int i = 0; i < natom; i++)
-	{	
-		Atom& at = atomVector[i];
-		at.R = sqrt(2. * BOLTZMAN * T * gamma * at.mass / dt);
-	}
-
 	cout << "REMARK Number of water molecules " << nwat << '\n';
 	cout << "REMARK Degrees of freedom " << nfree << '\n';
-	cout << "REMARK dt[fs] " << dt_ps * 1e3 << '\n';
-	cout << "REMARK gamma[ps-1] " << gamma_ps << '\n';
-	cout << "REMARK T[K] " << T << '\n';
-	//cout << "REMARK Cutoff[ang.] " << system.cutoff << '\n';
+	cout << "REMARK dt[fs] " << opt.dt_fs << '\n';
+	cout << "REMARK gamma[ps-1] " << opt.langevinDamping_ps << '\n';
+	cout << "REMARK T[K] " << opt.langevinTemp << '\n';
 
 	// make reciprocal vectors
 	Eigen::Vector3d g1 = sys.lattice._g1();
@@ -115,17 +101,8 @@ int main (int argc, char** argv)
 	}
 	ew_self *= -ene.ewcoeff / SQRTPI * COULOMB;
 
-
-	int icnt = 0;
-	for (int i = 0; i < natom; i++)
-	{
-		Atom& at = atomVector[i];
-		at.velocity.x() = dist(engine) * sqrt(BOLTZMAN * T / at.mass);
-		at.velocity.y() = dist(engine) * sqrt(BOLTZMAN * T / at.mass);
-		at.velocity.z() = dist(engine) * sqrt(BOLTZMAN * T / at.mass);
-	}
-	
-	//output(fo, atomVector, sys);
+	/* generate initial velocities */
+	job.reassign_velocities();
 
 	vector<int> lj_pair_list, el_pair_list, shake_list;
 	make_lj_pair(atomVector, lj_pair_list);
@@ -138,15 +115,8 @@ int main (int argc, char** argv)
 	out.print_energy(0);
 
 	calc_frc(atomVector, lj_pair_list, el_pair_list, sys, ene, g);
-	for (int i = 0; i < atomVector.size(); i++)
-	{
-		Atom& at = atomVector[i];
-		at.fold = at.force;
-		at.rold = at.position;
-		at.position = at.rold + dt * at.velocity + dtdt_div2 / at.mass * at.fold;
-	}
 
-	double accum = 0;
+	job.initial_posi_velret();
 
 	for (int istep = 1; istep <= nstep; istep++)
 	{
@@ -156,8 +126,8 @@ int main (int argc, char** argv)
 			Eigen::Vector3d
 			noise( dist(engine), dist(engine), dist(engine));
 			Atom& at = atomVector[i];
-			at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt / at.mass * (at.force + at.R * noise);
-			at.rnew = at.rnew * inB;
+			at.rnew = 2. * at.position - at.rold + job.gamma * job.dt_div2 * at.rold + job.dt * job.dt * at.invmass * (at.force + at.R * noise);
+			at.rnew = at.rnew * job.inB;
 		}
 
 		for (int ishake = 0; ishake < 100; ishake++)
@@ -174,7 +144,7 @@ int main (int argc, char** argv)
 		for (int i = 0; i < atomVector.size(); i++)
 		{
 			Atom& at = atomVector[i];
-			at.vnew = 0.5 / dt * (at.rnew - at.rold);
+			at.vnew = 0.5 / job.dt * (at.rnew - at.rold);
 		}
 
 		ene.calc_kinetic(atomVector);

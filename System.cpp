@@ -21,8 +21,6 @@ System::System(const Option& opt)
 	this->firsttimestep      = opt.firsttimestep;
 	this->DCDFreq            = opt.DCDFreq;
 
-	this->initialTemp        = opt.initialTemp;
-
 	this->rigidBonds         = opt.rigidBonds;
 	this->rigidIndexes       = opt.rigidIndexes;
 	this->rigidTolerance     = opt.rigidTolerance;
@@ -35,12 +33,6 @@ System::System(const Option& opt)
 	this->box_size_z         = opt.box_size_z;
 
 	this->iseed              = opt.iseed;
-
-	this->dt_fs              = opt.dt_fs;
-
-	this->langevinTemp       = opt.langevinTemp;
-	this->langevinDamping_ps = opt.langevinDamping_ps;
-	this->langevin           = opt.langevin;
 
 	if (this->boundaryType == "PBC")
 	{
