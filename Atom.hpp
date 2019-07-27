@@ -64,8 +64,8 @@ class Atom
 //      constructor
 	Atom(std::string s);
 	// some utilities
-	bool checkExclusionPair(Atom* atom);
-	bool checkScaled1_4Pair(Atom* atom);
+	bool checkExclusionPair(const Atom& atom);
+	bool checkScaled1_4Pair(const Atom& atom);
 	bool is_mainchain();
 
 	private:

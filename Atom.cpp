@@ -100,12 +100,12 @@ void Atom::reset_parameters()
 	is_rigid = false;
 }
 
-bool Atom::checkExclusionPair(Atom* atom)
+bool Atom::checkExclusionPair(const Atom& atom)
 {
 	// return true if exclusion pair.
 	for (const auto& i: exclusionVector)
         {
-		if (i == atom -> PSFIndex)
+		if (i == atom.PSFIndex)
 		{
 			return true;
 		}
@@ -113,12 +113,12 @@ bool Atom::checkExclusionPair(Atom* atom)
 	return false;
 }
 
-bool Atom::checkScaled1_4Pair(Atom* atom)
+bool Atom::checkScaled1_4Pair(const Atom& atom)
 {
 	// return true if 1-4 pair.
 	for (const auto& i: scaled1_4Vector)
 	{
-		if (i == atom -> PSFIndex)
+		if (i == atom.PSFIndex)
 		{
 			return true;
 		}
