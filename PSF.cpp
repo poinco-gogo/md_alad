@@ -327,6 +327,39 @@ bool PSF::set_lj_parm(vector<Atom>& LJParmVector)
 
 } // end of function() set_LJ_parm
 
+void PSF::make_exclusion_vector()
+{
+	if (bondVector.empty() || angleVector.empty())
+	{
+		cerr << "error in PSF::make_exclusion_vector()\n"
+		     << "please set parameter of bond and angle\n";
+		return;
+	}
+
+	// exclusion of 1-2 pair
+	for (auto& bond: bondVector)
+	{
+		if (bond.Kb < 0.1) continue;
+
+		Atom* atom1 = bond.ptr_atom1;
+		Atom* atom2 = bond.ptr_atom2;
+
+		atom1 -> exclusionVector.push_back(atom2 -> PSFIndex);
+		atom2 -> exclusionVector.push_back(atom1 -> PSFIndex);
+	}
+
+	// exclusion of 1-3 pair
+	for (auto& angle: angleVector)
+	{
+		Atom* atom1 = angle.ptr_atom1;
+		Atom* atom3 = angle.ptr_atom3;
+
+		atom1 -> exclusionVector.push_back(atom3 -> PSFIndex);
+		atom3 -> exclusionVector.push_back(atom1 -> PSFIndex);
+	}
+
+} // end of function PSF::make_exclusion_vector()
+
 void PSF::writePDB(string filename, string header, const vector<int>& indexVector)
 {
 	PDBUtil PDBJOBS;

@@ -51,6 +51,8 @@ int main (int argc, char** argv)
 	if (!PSFFile.set_angle_parm(ALL22.angleParmVector)) return 0;
 	if (!PSFFile.set_lj_parm(ALL22.LJParmVector)) return 0;
 
+	PSFFile.make_exclusion_vector();
+
 	Energy     ene(opt, &atomVector, &sys);
 	Integrator job(opt, &atomVector);
 

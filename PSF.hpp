@@ -35,6 +35,8 @@ class PSF
 	bool set_angle_parm(std::vector<Angle>& angleParmVector);
 	bool set_lj_parm(std::vector<Atom>& LJParmVector);
 
+	void make_exclusion_vector();
+
 	void showAtom(const Atom& atom);
 	void showResidue(int resID);
 
