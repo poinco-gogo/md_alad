@@ -53,7 +53,7 @@ int main (int argc, char** argv)
 
 	PSFFile.make_exclusion_vector();
 
-	Energy     ene(opt, &atomVector, &sys);
+	Energy     ene(opt, sys, atomVector, PSFFile);
 	Integrator job(opt, &atomVector);
 
 	job.set_ptr_engine(&engine);
@@ -89,17 +89,16 @@ int main (int argc, char** argv)
 	vector<int> shake_list;
 	make_shake_pair(atomVector, shake_list);
 
-	ene.calc_potential_energy();
-	ene.calc_kinetic_energy();
-	ene.es += ew_self;
-	out.print_energy(0);
-
+	ene.zero_force();
 	ene.calc_force();
+	ene.calc_kinetic_energy();
+	out.print_energy(0);
 
 	job.initial_posi_velret();
 
 	for (int istep = 1; istep <= nstep; istep++)
 	{
+		ene.zero_force();
 		ene.calc_force();
 		for (int i = 0; i < atomVector.size(); i++)
 		{
@@ -128,8 +127,8 @@ int main (int argc, char** argv)
 		}
 
 		ene.calc_kinetic_energy();
-		ene.calc_potential_energy();
-		ene.es += ew_self;
+		//ene.calc_potential_energy();
+		//ene.es += ew_self;
 		if (istep % print_energy_step== 0)
 			out.print_energy(istep);
 

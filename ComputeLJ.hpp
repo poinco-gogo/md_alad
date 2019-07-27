@@ -2,6 +2,7 @@
 #define ___CLASS_COMPUTE_LJ
 
 #include <Eigen/Core>
+#include "Option.hpp"
 #include "System.hpp"
 #include "Atom.hpp"
 #include "Lattice.hpp"
@@ -16,9 +17,9 @@ class ComputeLJ
 
 	public:
 	ComputeLJ() {}
-	ComputeLJ(System& sys, std::vector<Atom>& atomVector);
-	double ComputeForce();
-	Eigen::Vector3d ComputePairForce(Atom& at1, Atom& at2);
+	ComputeLJ(const Option& opt, System& sys, std::vector<Atom>& atomVector);
+	double compute_force();
+	Eigen::Vector3d compute_pair_force(Atom& at1, Atom& at2);
 
 	private:
 };

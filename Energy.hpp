@@ -4,9 +4,12 @@
 #include <vector>
 #include <string>
 #include "Atom.hpp"
+#include "PSF.hpp"
 #include "Lattice.hpp"
 #include "Option.hpp"
 #include "System.hpp"
+#include "ComputeLJ.hpp"
+#include "ComputeES.hpp"
 
 class Energy
 {
@@ -21,13 +24,14 @@ class Energy
 	double ewald_tolerance;
 	const double ewcoeff = 0.39467;
 
-	Energy(const Option& opt, std::vector<Atom>* ptr_atomVector, System* ptr_sys);
+	Energy(const Option& opt, System& sys, std::vector<Atom>& atomVector, PSF& psf);
 
 	double es, lj, kinetic;
 
 	void calc_kinetic_energy();
 	void calc_potential_energy();
 	void calc_force();
+	void zero_force();
 
 	private:
 	void show_simulation_info();
@@ -39,5 +43,8 @@ class Energy
 	std::vector<Atom>* ptr_atomVector;
 	std::vector<int> lj_pair_list, el_pair_list;
 	std::vector<Eigen::Vector3d> g;
+
+	ComputeLJ vlj;
+	ComputeES ves;
 };
 #endif

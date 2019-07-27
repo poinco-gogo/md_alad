@@ -8,10 +8,10 @@
 #include "common.hpp"
 using namespace std;
 
-Energy::Energy(const Option& opt, vector<Atom>* ptr_atomVector, System* ptr_sys)
+Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& psf)
 {
-	this->ptr_sys            = ptr_sys;
-	this->ptr_atomVector     = ptr_atomVector;
+	this->ptr_sys            = &sys;
+	this->ptr_atomVector     = &atomVector;
 
 	this->outputEnergies     = opt.outputEnergies;
 
@@ -24,6 +24,12 @@ Energy::Energy(const Option& opt, vector<Atom>* ptr_atomVector, System* ptr_sys)
 	this->pme_grid_z         = opt.pme_grid_z;
 	this->pme_spline_order   = opt.pme_spline_order;
 	this->ewald_tolerance    = opt.ewald_tolerance;
+
+	ComputeLJ tmp_lj(opt, sys, atomVector);
+	ComputeES tmp_es(opt, sys, atomVector, psf);
+
+	this->vlj = tmp_lj;
+	this->ves = tmp_es;
 
 	if (opt.boundaryType == "PBC") make_reciprocal_vectors();
 
@@ -107,7 +113,9 @@ void Energy::make_reciprocal_vectors()
 
 void Energy::calc_force()
 {
-	Lattice& lattice = ptr_sys->lattice;
+	lj = vlj.compute_force();
+	es = ves.compute_force();
+/*	Lattice& lattice = ptr_sys->lattice;
 	vector<Atom>& atomVector = *ptr_atomVector;
 
 	//static double cutoff   = ene.cutoff;
@@ -233,7 +241,7 @@ void Energy::calc_force()
 		iat.force += frc * const_recipro * COULOMB * iat.charge;
 //		cout << vabs(frc) << '\n';
 	}
-//	print(atomVector[0].fnew);
+//	print(atomVector[0].fnew);*/
 }
 
 void Energy::calc_potential_energy()
@@ -339,4 +347,10 @@ void Energy::calc_potential_energy()
 
 	es += ew_direct + ew_recipro - ew_intra;
 	es *= COULOMB;
+}
+
+void Energy::zero_force()
+{
+	for (auto& atom: *ptr_atomVector)
+		atom.force = V3ZERO;
 }

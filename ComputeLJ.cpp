@@ -3,16 +3,16 @@
 #include "ComputeLJ.hpp"
 using namespace std;
 
-ComputeLJ::ComputeLJ(System& sys, vector<Atom>& atomVector)
+ComputeLJ::ComputeLJ(const Option& opt, System& sys, vector<Atom>& atomVector)
 {
-	this->ptr_atomVector = &atomVector;
-	this->cutoff         = sys.cutoff;
-	this->cutoff2        = cutoff * cutoff;
-	this->boundaryType   = sys.boundaryType;
-	this->ptr_lattice    = &sys.lattice;
+	this->ptr_atomVector     = &atomVector;
+	this->cutoff             = opt.cutoff;
+	this->cutoff2            = cutoff * cutoff;
+	this->boundaryType       = sys.boundaryType;
+	this->ptr_lattice        = &sys.lattice;
 }
 
-double ComputeLJ::ComputeForce()
+double ComputeLJ::compute_force()
 {
 	Lattice lattice = *ptr_lattice;
 
@@ -94,7 +94,7 @@ double ComputeLJ::ComputeForce()
 	return sum_energy;
 }
 
-Eigen::Vector3d ComputeLJ::ComputePairForce(Atom& atom1, Atom& atom2)
+Eigen::Vector3d ComputeLJ::compute_pair_force(Atom& atom1, Atom& atom2)
 {
 	// return 0 if atom 1 and 2 are 1-2,1-3 pair
         if (atom1.checkExclusionPair(atom2))
