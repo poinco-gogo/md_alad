@@ -35,8 +35,6 @@ class Integrator
 	double langevinTemp, langevinDamping_ps;
 	std::string langevin;
 
-	std::vector<int> shake_list;
-
 	public:
 
 	Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, std::vector<Atom>* ptr_atomVector);
@@ -48,9 +46,6 @@ class Integrator
 
 	void set_derived_values();
 	void set_langevin_parameters();
-
-	void make_shake_pairs();
-	bool shake();
 
 	void run_position_velret(const int nstep);
 	void initial_posi_velret();

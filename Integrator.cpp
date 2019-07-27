@@ -33,8 +33,6 @@ Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vect
 	set_derived_values();
 
 	if (this->langevin == "yes") set_langevin_parameters();
-
-	make_shake_pairs();
 }
 
 void Integrator::set_derived_values()
@@ -104,17 +102,7 @@ void Integrator::run_position_velret(const int nstep)
 		if (rigidBonds == "yes")
 			if (!ene.vbnd.do_shake_loop())
 				die("error: shake does not converged!");
-/*
-		for (int ishake = 0; ishake < 100; ishake++)
-		{
-			if (shake())
-				break;
-			if (ishake == 99)
-			{
-				die("error: shake does not converged.");
-			}
-		}
-*/
+
 		position_velret_velocity();
 
 		ene.calc_kinetic_energy();
@@ -171,70 +159,4 @@ void Integrator::position_velret_velocity()
 {
 	for (auto& at: *ptr_atomVector)
 		at.velocity = 0.5 / dt * (at.rnew - at.rold);
-}
-
-bool Integrator::shake()
-{
-	static const double eps = 1e-6;
-	static const double eps2 = eps * eps;
-	static const double rOH = 0.9572;
-	static const double aHOH = 104.52 * DEG2RAD;
-	static const double dOH = rOH * rOH;
-	static const double rHH = rOH * sin(aHOH/2.) * 2.;
-	static const double dHH = rHH * rHH;
-
-	vector<Atom>& atomVector = *ptr_atomVector;
-
-	for (int i = 0; i < shake_list.size() / 2; i++)
-	{
-		Atom& at1 = atomVector[shake_list[2 * i]];
-		Atom& at2 = atomVector[shake_list[2 * i + 1]];
-		double gamma;
-		if (at1.PDBAtomName[0] == 'O' && at2.PDBAtomName[0] == 'H')
-		{
-			gamma = (dOH - (at1.rnew - at2.rnew).squaredNorm()) /
-				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position).dot(at1.rnew - at2.rnew)));
-		}
-		else
-		{
-			gamma = (dHH - (at1.rnew - at2.rnew).squaredNorm()) /
-				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position).dot(at1.rnew - at2.rnew)));
-
-		}
-		at1.rnew = at1.rnew + gamma * (at1.position - at2.position) / at1.mass;
-		at2.rnew = at2.rnew + gamma * (at2.position - at1.position) / at2.mass;
-	}
-
-	for (int i = 0; i < shake_list.size() / 2; i++)
-	{
-		Atom& at1 = atomVector[shake_list[2 * i]];
-		Atom& at2 = atomVector[shake_list[2 * i + 1]];
-		double r = (at1.rnew - at2.rnew).norm();
-		double error;
-		if (at1.PDBAtomName[0]  == 'O' && at2.PDBAtomName[0] == 'H')
-		{
-			error = abs(r - rOH);
-		}
-		else
-		{
-			error = abs(r - rHH);
-		}
-		if (error > eps) return false;
-	}
-
-	return true;
-}
-
-void Integrator::make_shake_pairs()
-{
-	for (int i = 0; i < ptr_atomVector->size() / 3; i++)
-	{
-		int j = 3 * i;
-		shake_list.push_back(j);
-		shake_list.push_back(j+1);
-		shake_list.push_back(j);
-		shake_list.push_back(j+2);
-		shake_list.push_back(j+1);
-		shake_list.push_back(j+2);
-	}
 }
