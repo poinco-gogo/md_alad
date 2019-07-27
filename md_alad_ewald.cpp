@@ -20,8 +20,8 @@
 #include "Output.hpp"
 #include "Lattice.hpp"
 using namespace std;
-bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
-void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
+//bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
+//void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
 int main (int argc, char** argv)
 {
 	if (argc < 3)
@@ -54,19 +54,19 @@ int main (int argc, char** argv)
 	PSFFile.make_exclusion_vector();
 
 	Energy     ene(opt, sys, atomVector, PSFFile);
-	Integrator job(opt, &atomVector);
 
+	Output out(&fo, &sys, &ene, &atomVector);
+
+	Integrator job(opt, &ene, &out, &atomVector);
 	job.set_ptr_engine(&engine);
-
-	Output out(&atomVector, &sys, &ene);
 
 	const int natom = atomVector.size();
 	const int nwat  = natom / 3;
 	const int nfree = natom * 3 - nwat * 3;
 	sys.nfree = nfree;
 
-	const int print_energy_step = ene.outputEnergies;
-	const int print_trj_step    = sys.DCDFreq;
+	//const int print_energy_step = ene.outputEnergies;
+	//const int print_trj_step    = sys.DCDFreq;
 	const int nstep             = sys.nstep;
 
 	cout << "REMARK Number of atoms " << natom << '\n';
@@ -79,16 +79,19 @@ int main (int argc, char** argv)
 	/* generate initial velocities */
 	job.reassign_velocities();
 
-	vector<int> shake_list;
-	make_shake_pair(atomVector, shake_list);
+	//vector<int> shake_list;
+	//make_shake_pair(atomVector, shake_list);
 
 	ene.zero_force();
 	ene.calc_force();
 	ene.calc_kinetic_energy();
 	out.print_energy(0);
 
-	job.initial_posi_velret();
+	//job.initial_posi_velret();
 
+	job.do_md_loop(nstep);
+
+/*
 	for (int istep = 1; istep <= nstep; istep++)
 	{
 		ene.zero_force();
@@ -137,9 +140,10 @@ int main (int argc, char** argv)
 			at.velocity = at.vnew;
 		}
 	}
+*/
 }
 /////////////////////////  end of main program
-
+/*
 bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
 {
 	static const double eps = 1e-6;
@@ -201,4 +205,4 @@ void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list)
 		shake_list.push_back(j+1);
 		shake_list.push_back(j+2);
 	}
-}
+}*/
