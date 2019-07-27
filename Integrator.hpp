@@ -51,8 +51,8 @@ class Integrator
 	bool shake();
 
 	void run_position_velret(const int nstep);
-	void initial_posi_velret(const int nstep);
+	void initial_posi_velret();
 
-	void run_velocity_velret();
+	void run_velocity_velret(const int nstep);
 };
 #endif
