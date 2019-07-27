@@ -76,13 +76,6 @@ int main (int argc, char** argv)
 	cout << "REMARK gamma[ps-1] " << opt.langevinDamping_ps << '\n';
 	cout << "REMARK T[K] " << opt.langevinTemp << '\n';
 
-	double ew_self = 0;
-	for (int i = 0; i < atomVector.size(); i++)
-	{	
-		ew_self += atomVector[i].charge * atomVector[i].charge;
-	}
-	ew_self *= -ene.ewcoeff / SQRTPI * COULOMB;
-
 	/* generate initial velocities */
 	job.reassign_velocities();
 
@@ -127,8 +120,7 @@ int main (int argc, char** argv)
 		}
 
 		ene.calc_kinetic_energy();
-		//ene.calc_potential_energy();
-		//ene.es += ew_self;
+
 		if (istep % print_energy_step== 0)
 			out.print_energy(istep);
 
