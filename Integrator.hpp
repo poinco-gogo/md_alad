@@ -52,6 +52,8 @@ class Integrator
 
 	void run_position_velret(const int nstep);
 	void initial_posi_velret();
+	void position_velret_integrate();
+	void position_velret_velocity();
 
 	void run_velocity_velret(const int nstep);
 };

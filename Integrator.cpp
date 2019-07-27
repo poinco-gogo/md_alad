@@ -87,12 +87,8 @@ void Integrator::do_md_loop(const int nstep)
 
 void Integrator::run_position_velret(const int nstep)
 {
-	normal_distribution<double> dist(0., 1.);
-
 	Energy& ene = *ptr_ene;
 	Output& out = *ptr_out;
-
-	mt19937& engine = *ptr_engine;
 
 	vector<Atom>& atomVector = *ptr_atomVector;
 
@@ -102,13 +98,8 @@ void Integrator::run_position_velret(const int nstep)
 	{
 		ene.zero_force();
 		ene.calc_force();
-		for (auto& at: atomVector)
-		{
-			Eigen::Vector3d
-			noise( dist(engine), dist(engine), dist(engine));
-			at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt * at.invmass * (at.force + at.R * noise);
-			at.rnew = at.rnew * inB;
-		}
+
+		position_velret_integrate();
 
 		for (int ishake = 0; ishake < 100; ishake++)
 		{
@@ -120,11 +111,7 @@ void Integrator::run_position_velret(const int nstep)
 			}
 		}
 
-		for (int i = 0; i < atomVector.size(); i++)
-		{
-			Atom& at = atomVector[i];
-			at.vnew = 0.5 / dt * (at.rnew - at.rold);
-		}
+		position_velret_velocity();
 
 		ene.calc_kinetic_energy();
 
@@ -132,9 +119,7 @@ void Integrator::run_position_velret(const int nstep)
 			out.print_energy(istep);
 
 		if (istep % print_trj_step== 0)
-		{
 			out.output_xyz();
-		}
 
 		for (int i = 0; i < atomVector.size(); i++)
 		{
@@ -156,6 +141,26 @@ void Integrator::initial_posi_velret()
 		at.position = at.rold + dt * at.velocity
 			+ dtdt_div2 * at.invmass * at.fold;
 	}
+}
+
+void Integrator::position_velret_integrate()
+{
+	mt19937& engine = *ptr_engine;
+	normal_distribution<double> dist(0., 1.);
+
+	for (auto& at: *ptr_atomVector)
+	{
+		Eigen::Vector3d
+		noise( dist(engine), dist(engine), dist(engine));
+		at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt * at.invmass * (at.force + at.R * noise);
+		at.rnew = at.rnew * inB;
+	}
+}
+
+void Integrator::position_velret_velocity()
+{
+	for (auto& at: *ptr_atomVector)
+		at.velocity = 0.5 / dt * (at.rnew - at.rold);
 }
 
 bool Integrator::shake()

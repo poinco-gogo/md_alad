@@ -28,7 +28,7 @@ void Energy::calc_kinetic_energy()
 
 	for (auto& atom: *ptr_atomVector)
 	{
-		this->kinetic += atom.mass * atom.vnew.squaredNorm();
+		this->kinetic += atom.mass * atom.velocity.squaredNorm();
 	}
 
 	this->kinetic *= 0.5;
