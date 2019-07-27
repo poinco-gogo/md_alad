@@ -456,3 +456,18 @@ void PSF::showResidue(int resID)
 		cout << "REMARK warning: no residue hit for resID: "
 		<< resID << '\n';
 }
+
+void PSF::make_water_shake_bond_array()
+{
+	for (int i = 0; i < ptr_atomVector->size(); i++)
+	{
+		Atom& atom = ptr_atomVector->at(i);
+
+		if (atom.PDBAtomName == "OH2")
+		{
+			// store 1-based index
+			bondArray.push_back(i + 1 + 1);
+			bondArray.push_back(i + 2 + 1);
+		}
+	}
+}

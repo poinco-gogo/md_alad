@@ -44,6 +44,8 @@ class PSF
 	void writePDB(std::string filename, std::string header, const std::vector<int>& indexVector);
 	void writePDB(std::string filename, std::vector<Atom>& atomVector, std::string header);
 
+	void make_water_shake_bond_array();
+
 	// for internal use
 	private:
 	void read_PSF();

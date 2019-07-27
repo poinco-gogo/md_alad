@@ -44,6 +44,8 @@ int main (int argc, char** argv)
 	if (!PDBFile.LoadCoords(atomVector))
 		return 1;
 
+	if (opt.rigidBonds == "yes") PSFFile.make_water_shake_bond_array();
+
 	LoadParm ALL22(sys.parameters);
 	if (!PSFFile.set_bond_parm(ALL22.bondParmVector)) return 0;
 	if (!PSFFile.set_angle_parm(ALL22.angleParmVector)) return 0;
