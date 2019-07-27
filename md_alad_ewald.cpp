@@ -20,8 +20,6 @@
 #include "Output.hpp"
 #include "Lattice.hpp"
 using namespace std;
-//bool shake(vector<Atom>& atomVector, vector<int>& shake_list);
-//void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list);
 int main (int argc, char** argv)
 {
 	if (argc < 3)
@@ -65,11 +63,8 @@ int main (int argc, char** argv)
 	const int nfree = natom * 3 - nwat * 3;
 	sys.nfree = nfree;
 
-	//const int print_energy_step = ene.outputEnergies;
-	//const int print_trj_step    = sys.DCDFreq;
 	const int nstep             = sys.nstep;
 
-	cout << "REMARK Number of atoms " << natom << '\n';
 	cout << "REMARK Number of water molecules " << nwat << '\n';
 	cout << "REMARK Degrees of freedom " << nfree << '\n';
 	cout << "REMARK dt[fs] " << opt.dt_fs << '\n';
@@ -79,130 +74,10 @@ int main (int argc, char** argv)
 	/* generate initial velocities */
 	job.reassign_velocities();
 
-	//vector<int> shake_list;
-	//make_shake_pair(atomVector, shake_list);
-
 	ene.zero_force();
 	ene.calc_force();
 	ene.calc_kinetic_energy();
 	out.print_energy(0);
 
-	//job.initial_posi_velret();
-
 	job.do_md_loop(nstep);
-
-/*
-	for (int istep = 1; istep <= nstep; istep++)
-	{
-		ene.zero_force();
-		ene.calc_force();
-		for (int i = 0; i < atomVector.size(); i++)
-		{
-			Eigen::Vector3d
-			noise( dist(engine), dist(engine), dist(engine));
-			Atom& at = atomVector[i];
-			at.rnew = 2. * at.position - at.rold + job.gamma * job.dt_div2 * at.rold + job.dt * job.dt * at.invmass * (at.force + at.R * noise);
-			at.rnew = at.rnew * job.inB;
-		}
-
-		for (int ishake = 0; ishake < 100; ishake++)
-		{
-			if (shake(atomVector, shake_list))
-				break;
-			if (ishake == 99)
-			{
-				cerr << "error: shake does not converged.\n";
-				return 1;
-			}
-		}
-
-		for (int i = 0; i < atomVector.size(); i++)
-		{
-			Atom& at = atomVector[i];
-			at.vnew = 0.5 / job.dt * (at.rnew - at.rold);
-		}
-
-		ene.calc_kinetic_energy();
-
-		if (istep % print_energy_step== 0)
-			out.print_energy(istep);
-
-		if (istep % print_trj_step== 0)
-		{
-			out.output_xyz(fo);
-		}
-
-		for (int i = 0; i < atomVector.size(); i++)
-		{
-			Atom& at = atomVector[i];
-			at.rold = at.position;
-			at.position = at.rnew;
-			at.velocity = at.vnew;
-		}
-	}
-*/
 }
-/////////////////////////  end of main program
-/*
-bool shake(vector<Atom>& atomVector, vector<int>& shake_list)
-{
-	static const double eps = 1e-6;
-	static const double eps2 = eps * eps;
-	static const double rOH = 0.9572;
-	static const double aHOH = 104.52 * DEG2RAD;
-	static const double dOH = rOH * rOH;
-	static const double rHH = rOH * sin(aHOH/2.) * 2.;
-	static const double dHH = rHH * rHH;
-	for (int i = 0; i < shake_list.size() / 2; i++)
-	{
-		Atom& at1 = atomVector[shake_list[2 * i]];
-		Atom& at2 = atomVector[shake_list[2 * i + 1]];
-		double gamma;
-		if (at1.PDBAtomName[0] == 'O' && at2.PDBAtomName[0] == 'H')
-		{
-			gamma = (dOH - (at1.rnew - at2.rnew).squaredNorm()) /
-				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position).dot(at1.rnew - at2.rnew)));
-		}
-		else
-		{
-			gamma = (dHH - (at1.rnew - at2.rnew).squaredNorm()) /
-				(2.*(1./at1.mass+1./at2.mass)*((at1.position - at2.position).dot(at1.rnew - at2.rnew)));
-
-		}
-		at1.rnew = at1.rnew + gamma * (at1.position - at2.position) / at1.mass;
-		at2.rnew = at2.rnew + gamma * (at2.position - at1.position) / at2.mass;
-	}
-
-	for (int i = 0; i < shake_list.size() / 2; i++)
-	{
-		Atom& at1 = atomVector[shake_list[2 * i]];
-		Atom& at2 = atomVector[shake_list[2 * i + 1]];
-		double r = (at1.rnew - at2.rnew).norm();
-		double error;
-		if (at1.PDBAtomName[0]  == 'O' && at2.PDBAtomName[0] == 'H')
-		{
-			error = abs(r - rOH);
-		}
-		else
-		{
-			error = abs(r - rHH);
-		}
-		if (error > eps) return false;
-	}
-
-	return true;
-}
-
-void make_shake_pair(vector<Atom>& atomVector, vector<int>& shake_list)
-{
-	for (int i = 0; i < atomVector.size() / 3; i++)
-	{
-		int j = 3 * i;
-		shake_list.push_back(j);
-		shake_list.push_back(j+1);
-		shake_list.push_back(j);
-		shake_list.push_back(j+2);
-		shake_list.push_back(j+1);
-		shake_list.push_back(j+2);
-	}
-}*/
