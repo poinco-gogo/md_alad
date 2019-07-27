@@ -13,17 +13,21 @@ Output::Output(ofstream* ptr_fo, System* ptr_sys, Energy* ptr_ene, vector<Atom>*
 
 void Output::print_energy(int istep)
 {
-	double totpot = ptr_ene->es + ptr_ene->lj;
-	double totene = totpot + ptr_ene->kinetic;
-	double temp   = ptr_ene->kinetic * 2. / ptr_sys->nfree * INVBOLTZMAN;
+	Energy& ene = *ptr_ene;
+
+	double totpot = ene.ebond + ene.eangle + ene.ees + ene.elj;
+	double totene = totpot + ene.kinetic;
+	double temp   = ene.kinetic * 2. / ptr_sys->nfree * INVBOLTZMAN;
 
 	cout 
 		<< setprecision(4) << fixed
 		<< setw(12) << istep
-		<< setw(16) << ptr_ene->lj
-		<< setw(16) << ptr_ene->es
+		<< setw(16) << ene.ebond
+		<< setw(16) << ene.eangle
+		<< setw(16) << ene.elj
+		<< setw(16) << ene.ees
 		<< setw(16) << totpot
-		<< setw(16) << ptr_ene->kinetic
+		<< setw(16) << ene.kinetic
 		<< setw(16) << totene
 		<< setw(16) << temp
 		<< '\n';

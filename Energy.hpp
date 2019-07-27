@@ -8,6 +8,8 @@
 #include "Lattice.hpp"
 #include "Option.hpp"
 #include "System.hpp"
+#include "ComputeBond.hpp"
+#include "ComputeAngle.hpp"
 #include "ComputeLJ.hpp"
 #include "ComputeES.hpp"
 
@@ -19,7 +21,12 @@ class Energy
 
 	Energy(const Option& opt, System& sys, std::vector<Atom>& atomVector, PSF& psf);
 
-	double es, lj, kinetic;
+	double ebond, eangle, ees, elj, kinetic;
+
+	ComputeBond              vbnd;
+	ComputeAngle             vang;
+	ComputeLJ                vlj;
+	ComputeES                ves;
 
 	void calc_kinetic_energy();
 	void calc_force();
@@ -29,8 +36,5 @@ class Energy
 
 	System* ptr_sys;
 	std::vector<Atom>* ptr_atomVector;
-
-	ComputeLJ vlj;
-	ComputeES ves;
 };
 #endif

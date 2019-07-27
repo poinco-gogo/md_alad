@@ -19,6 +19,8 @@ Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vect
 
 	this->dt_fs              = opt.dt_fs;
 
+	this->rigidBonds         = opt.rigidBonds;
+
 	this->langevinTemp       = opt.langevinTemp;
 	this->langevinDamping_ps = opt.langevinDamping_ps;
 	this->langevin           = opt.langevin;
@@ -99,6 +101,10 @@ void Integrator::run_position_velret(const int nstep)
 
 		position_velret_integrate();
 
+		if (rigidBonds == "yes")
+			if (!ene.vbnd.do_shake_loop())
+				die("error: shake does not converged!");
+/*
 		for (int ishake = 0; ishake < 100; ishake++)
 		{
 			if (shake())
@@ -108,7 +114,7 @@ void Integrator::run_position_velret(const int nstep)
 				die("error: shake does not converged.");
 			}
 		}
-
+*/
 		position_velret_velocity();
 
 		ene.calc_kinetic_energy();
@@ -126,7 +132,6 @@ void Integrator::run_position_velret(const int nstep)
 			at.velocity = at.vnew;
 		}
 	}
-
 }
 
 void Integrator::initial_posi_velret()

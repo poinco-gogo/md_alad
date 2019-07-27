@@ -30,6 +30,8 @@ class Integrator
 	double dt_fs, dt_ps, dt, dt_div2, dtdt_div2;
 	double gamma_ps, gamma, A, B, inB;
 
+	std::string rigidBonds;
+
 	double langevinTemp, langevinDamping_ps;
 	std::string langevin;
 

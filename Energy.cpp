@@ -15,11 +15,15 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 
 	this->outputEnergies     = opt.outputEnergies;
 
-	ComputeLJ tmp_lj(opt, sys, atomVector);
-	ComputeES tmp_es(opt, sys, atomVector, psf);
+	ComputeBond              tmp_bnd(opt, psf.bondVector);
+	ComputeAngle             tmp_ang(psf.angleVector);
+	ComputeLJ                tmp_lj(opt, sys, atomVector);
+	ComputeES                tmp_es(opt, sys, atomVector, psf);
 
-	this->vlj = tmp_lj;
-	this->ves = tmp_es;
+	this->vbnd               = tmp_bnd;
+	this->vang               = tmp_ang;
+	this->vlj                = tmp_lj;
+	this->ves                = tmp_es;
 }
 
 void Energy::calc_kinetic_energy()
@@ -36,8 +40,10 @@ void Energy::calc_kinetic_energy()
 
 void Energy::calc_force()
 {
-	lj = vlj.compute_force();
-	es = ves.compute_force();
+	ebond                    = vbnd.compute_force();
+	eangle                   = vang.compute_force();
+	elj                      = vlj.compute_force();
+	ees                      = ves.compute_force();
 }
 
 void Energy::zero_force()
