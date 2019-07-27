@@ -16,7 +16,7 @@ ComputeBond::ComputeBond(const Option& opt, vector<Bond>& bondVector)
 	this -> rigidIterations = opt.rigidIterations;
 
 	cout << "REMARK RIGID BONDS : ";
-	if (rigidBonds == "yes")
+	if (rigidBonds)
 	{
 		cout << "ALL\n";
 		cout << "REMARK         ERROR TOLERANCE : " << rigidTolerance << '\n';

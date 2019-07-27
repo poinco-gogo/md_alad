@@ -19,7 +19,7 @@ class ComputeES
 	std::vector<Atom>* ptr_atomVector;
 	std::string boundaryType;
 	Lattice* ptr_lattice;
-	std::string usePME;
+	bool usePME;
 	int pme_grid_x, pme_grid_y, pme_grid_z, pme_spline_order;
 	double cutoff, ewcoef, ewald_kmax, cutoff2, ewcoef2, ewald_tolerance;
 

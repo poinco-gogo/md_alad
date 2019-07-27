@@ -32,7 +32,7 @@ Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vect
 
 	set_derived_values();
 
-	if (this->langevin == "yes") set_langevin_parameters();
+	if (this->langevin) set_langevin_parameters();
 }
 
 void Integrator::set_derived_values()
@@ -99,7 +99,7 @@ void Integrator::run_position_velret(const int nstep)
 
 		position_velret_integrate();
 
-		if (rigidBonds == "yes")
+		if (rigidBonds)
 			if (!ene.vbnd.do_shake_loop())
 				die("error: shake does not converged!");
 
@@ -130,7 +130,7 @@ void Integrator::initial_posi_velret()
 			+ dtdt_div2 * at.invmass * at.force;
 	}
 
-	if (rigidBonds == "yes")
+	if (rigidBonds)
 		if (!ptr_ene->vbnd.do_shake_loop())
 			die("error: shake does not converged!");
 

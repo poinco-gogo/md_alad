@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <ctime>
+#include <algorithm>
 #include "Option.hpp"
 using namespace std;
 Option::Option(string filename)
@@ -21,7 +22,7 @@ void Option::reset()
 
 	integrator     = "POSI";
 
-	rigidBonds      = "no";
+	rigidBonds      = false;
 	rigidTolerance  = 1e-10;
 	rigidIterations = 100;
 
@@ -33,7 +34,7 @@ void Option::reset()
 
 	cutoff = 12.;
 
-	usePME = "no";
+	usePME = false;
 	ewald_kmax = 10;
 	pme_grid_x = 32;
 	pme_grid_y = 32;
@@ -47,7 +48,7 @@ void Option::reset()
 
 	langevinTemp       = 300;
 	langevinDamping_ps = 0.5;
-	langevin           = "off";
+	langevin           = false;
 }
 
 bool Option::load_config()
@@ -122,7 +123,8 @@ bool Option::load_config()
 		}
                 else if (s.find("rigidBonds", 0) != string::npos)
                 {
-                        is >> stmp >> this->rigidBonds;
+                        is >> stmp >> stmp;
+			this->rigidBonds = stobool(stmp);
                 }
 		else if (s.find("rigidTolerance", 0) != string::npos)
                 {
@@ -166,7 +168,8 @@ bool Option::load_config()
 		}
 		else if (s.find("usePME", 0) != string::npos)
 		{
-			is >> stmp >> this->usePME;
+			is >> stmp >> stmp;
+			this->usePME = stobool(stmp);
 		}
 		else if (s.find("pme_grid_x", 0) != string::npos)
 		{
@@ -202,7 +205,8 @@ bool Option::load_config()
 		}
 		else if (s.find("langevin", 0) != string::npos)
 		{
-			is >> stmp >> this->langevin;
+			is >> stmp >> stmp;
+			this->langevin = stobool(stmp);
 		}
 		else
 		{
@@ -225,4 +229,12 @@ bool Option::load_config()
 	{
 		this->iseed = time(NULL);
 	}
+}
+
+bool Option::stobool(string s)
+{
+	for (auto& c: s) c = toupper(c);
+
+	if (s == "YES" || s == "ON") return true;
+	else return false;
 }

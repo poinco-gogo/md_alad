@@ -10,7 +10,7 @@
 class ComputeBond
 {
 	private:
-	std::string rigidBonds;
+	bool rigidBonds;
 	double  rigidTolerance;
 	int     rigidIterations;
 

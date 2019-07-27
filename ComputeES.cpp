@@ -251,7 +251,7 @@ double ComputeES::compute_ewald_force()
 	sum_energy -= Uintra;
 
 	// Ewald reciprocal sum
-	if (usePME == "yes")
+	if (usePME)
 		sum_energy += calc_ewald_recip_pme();
 	else
 		sum_energy += calc_ewald_recip_direct();

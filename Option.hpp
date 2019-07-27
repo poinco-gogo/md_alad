@@ -21,7 +21,8 @@ class Option
 
 	std::string integrator;
 
-	std::string rigidBonds, rigidIndexes;
+	bool rigidBonds;
+	std::string rigidIndexes;
         double rigidTolerance;
         int    rigidIterations;
 
@@ -30,7 +31,7 @@ class Option
 
 	double cutoff;
 
-	std::string usePME;
+	bool usePME;
 	int ewald_kmax, pme_grid_x, pme_grid_y, pme_grid_z, pme_spline_order;
 	double ewald_tolerance;
 
@@ -39,6 +40,10 @@ class Option
 	double dt_fs;
 
 	double langevinTemp, langevinDamping_ps;
-	std::string langevin;
+	bool langevin;
+
+	private:
+
+	bool stobool(std::string);
 };
 #endif
