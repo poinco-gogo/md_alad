@@ -90,8 +90,6 @@ void Integrator::run_position_velret(const int nstep)
 	Energy& ene = *ptr_ene;
 	Output& out = *ptr_out;
 
-	vector<Atom>& atomVector = *ptr_atomVector;
-
 	initial_posi_velret();
 
 	for (int istep = 1; istep <= nstep; istep++)
@@ -121,9 +119,8 @@ void Integrator::run_position_velret(const int nstep)
 		if (istep % print_trj_step== 0)
 			out.output_xyz();
 
-		for (int i = 0; i < atomVector.size(); i++)
+		for (auto& at: *ptr_atomVector)
 		{
-			Atom& at = atomVector[i];
 			at.rold = at.position;
 			at.position = at.rnew;
 			at.velocity = at.vnew;
