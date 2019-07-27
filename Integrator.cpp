@@ -138,10 +138,18 @@ void Integrator::initial_posi_velret()
 {
 	for (auto& at: *ptr_atomVector)
 	{
-		at.fold = at.force;
+		at.rnew = at.position + dt * at.velocity
+			+ dtdt_div2 * at.invmass * at.force;
+	}
+
+	if (rigidBonds == "yes")
+		if (!ptr_ene->vbnd.do_shake_loop())
+			die("error: shake does not converged!");
+
+	for (auto& at: *ptr_atomVector)
+	{
 		at.rold = at.position;
-		at.position = at.rold + dt * at.velocity
-			+ dtdt_div2 * at.invmass * at.fold;
+		at.position = at.rnew;
 	}
 }
 
