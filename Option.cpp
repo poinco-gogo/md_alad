@@ -19,6 +19,8 @@ void Option::reset()
 
 	initialTemp    = 0;
 
+	integrator     = "POSI";
+
 	rigidBonds      = "no";
 	rigidTolerance  = 1e-10;
 	rigidIterations = 100;
@@ -81,6 +83,10 @@ bool Option::load_config()
                 else if (s.find("DCDFreq", 0) != string::npos)
                 {
                         is >> stmp >> this->DCDFreq;
+                }
+                else if (s.find("integrator", 0) != string::npos)
+                {
+                        is >> stmp >> this->integrator;
                 }
 		else if (s.find("outputEnergies", 0) != string::npos)
                 {

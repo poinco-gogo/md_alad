@@ -19,6 +19,8 @@ class Option
 
         double initialTemp;
 
+	std::string integrator;
+
 	std::string rigidBonds, rigidIndexes;
         double rigidTolerance;
         int    rigidIterations;

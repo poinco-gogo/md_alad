@@ -10,6 +10,8 @@ using namespace std;
 
 Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vector<Atom>* ptr_atomVector)
 {
+	this->integrator         = opt.integrator;
+
 	this->print_energy_step  = opt.outputEnergies;
 	this->print_trj_step     = opt.DCDFreq;
 
@@ -79,6 +81,12 @@ void Integrator::reassign_velocities()
 
 void Integrator::do_md_loop(const int nstep)
 {
+	if (this->integrator == "POSI")
+		run_position_velret(nstep);
+}
+
+void Integrator::run_position_velret(const int nstep)
+{
 	normal_distribution<double> dist(0., 1.);
 
 	Energy& ene = *ptr_ene;
@@ -136,6 +144,7 @@ void Integrator::do_md_loop(const int nstep)
 			at.velocity = at.vnew;
 		}
 	}
+
 }
 
 void Integrator::initial_posi_velret()

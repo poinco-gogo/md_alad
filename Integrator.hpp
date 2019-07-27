@@ -21,6 +21,8 @@ class Integrator
 
 	Output* ptr_out;
 
+	std::string integrator;
+
 	int print_energy_step, print_trj_step;
 
         double initialTemp;
@@ -48,6 +50,9 @@ class Integrator
 	void make_shake_pairs();
 	bool shake();
 
-	void initial_posi_velret();
+	void run_position_velret(const int nstep);
+	void initial_posi_velret(const int nstep);
+
+	void run_velocity_velret();
 };
 #endif
