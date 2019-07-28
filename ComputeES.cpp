@@ -28,20 +28,24 @@ ComputeES::ComputeES(const Option& opt, System& sys, vector<Atom>& atomVector, P
 	if (boundaryType == "PBC")
 	{
 		make_reciprocal_vectors();
-/*
-		cout << "REMARK Ewald parameters:\n"
-			"REMARK     Ewald coefficient: " << ewcoef << '\n' <<
-			"REMARK     Ewald tolerance  : " << tol << '\n' <<
-			"REMARK     Ewald kmax       : " << kmax << '\n' <<
-			"REMARK     use PME          : " << this->usePME
-			<< '\n';
-		if (this->usePME == "yes")
-		cout << "REMARK     PME grid size x  : " << this->pme_grid_x << '\n' <<
-		        "REMARK     PME grid size y  : " << this->pme_grid_y << '\n' <<
-		        "REMARK     PME grid size z  : " << this->pme_grid_z << '\n' <<
-		        "REMARK     PME spline order : " << this->pme_spline_order << '\n';
-*/
+
+		show_simulation_info_ewald();
 	}
+}
+
+void ComputeES::show_simulation_info_ewald()
+{
+	cout << "REMARK Ewald parameters:\n"
+		"REMARK     Ewald coefficient: " << ewcoef << '\n' <<
+		"REMARK     Ewald tolerance  : " << ewald_tolerance << '\n' <<
+		"REMARK     Ewald kmax       : " << ewald_kmax
+		<< '\n';
+	if (usePME)
+	cout << "REMARK     use PME          : " << "yes\n" <<
+		"REMARK     PME grid size x  : " << pme_grid_x << '\n' <<
+		"REMARK     PME grid size y  : " << pme_grid_y << '\n' <<
+		"REMARK     PME grid size z  : " << pme_grid_z << '\n' <<
+		"REMARK     PME spline order : " << pme_spline_order << '\n';
 }
 
 double ComputeES::calc_ewcoef()

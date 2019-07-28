@@ -34,6 +34,7 @@ class ComputeES
 	Eigen::Vector3d compute_pair_force(Atom& at1, Atom& at2);
 
 	private:
+	void show_simulation_info_ewald();
 	double calc_ewcoef();
 	double calc_ewald_recip_direct();
 	double calc_ewald_recip_pme();
