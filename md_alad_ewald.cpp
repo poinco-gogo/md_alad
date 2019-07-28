@@ -60,15 +60,9 @@ int main (int argc, char** argv)
 	Integrator job(opt, &ene, &out, &atomVector);
 	job.set_ptr_engine(&engine);
 
-	const int natom = atomVector.size();
-	const int nwat  = natom / 3;
-	const int nfree = natom * 3 - nwat * 3;
-	sys.nfree = nfree;
+	sys.nfree = 3 * atomVector.size() - ene.vbnd._num_shake_bond();
 
-	const int nstep             = sys.nstep;
-
-	cout << "REMARK Number of water molecules " << nwat << '\n';
-	cout << "REMARK Degrees of freedom " << nfree << '\n';
+	cout << "REMARK Degrees of freedom " << sys.nfree << '\n';
 	cout << "REMARK dt[fs] " << opt.dt_fs << '\n';
 	cout << "REMARK gamma[ps-1] " << opt.langevinDamping_ps << '\n';
 	cout << "REMARK T[K] " << opt.langevinTemp << '\n';
@@ -81,5 +75,5 @@ int main (int argc, char** argv)
 	ene.calc_kinetic_energy();
 	out.print_energy(0);
 
-	job.do_md_loop(nstep);
+	job.do_md_loop(sys.nstep);
 }
