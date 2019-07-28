@@ -38,5 +38,9 @@ class Energy
 
 	System* ptr_sys;
 	std::vector<Atom>* ptr_atomVector;
+
+	double cutoff;
+
+	void show_simulation_info();
 };
 #endif

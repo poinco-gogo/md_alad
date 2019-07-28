@@ -15,6 +15,8 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 
 	this->outputEnergies     = opt.outputEnergies;
 
+	this->cutoff             = opt.cutoff;
+
 	ComputeBond              tmp_bnd(opt, psf.bondVector);
 	ComputeAngle             tmp_ang(psf.angleVector);
 	ComputeLJ                tmp_lj(opt, sys, atomVector);
@@ -24,6 +26,13 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 	this->vang               = tmp_ang;
 	this->vlj                = tmp_lj;
 	this->ves                = tmp_es;
+
+	show_simulation_info();
+}
+
+void Energy::show_simulation_info()
+{
+	cout << "REMARK cutoff[ang.] " << cutoff << '\n';
 }
 
 void Energy::calc_temperature()
