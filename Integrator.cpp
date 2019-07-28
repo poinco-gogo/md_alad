@@ -77,6 +77,19 @@ void Integrator::reassign_velocities()
 		at.velocity.y() = dist( *ptr_engine ) * sqrt( kbT_imass );
 		at.velocity.z() = dist( *ptr_engine ) * sqrt( kbT_imass );
 	}
+
+	ptr_ene->calc_kinetic_energy();
+	ptr_ene->calc_temperature();
+
+	double factor = sqrt( langevinTemp / ptr_ene->temperature );
+
+	scale_velocity( factor );
+}
+
+void Integrator::scale_velocity(const double factor)
+{
+	for (auto& at: *ptr_atomVector)
+		at.velocity *= factor;
 }
 
 void Integrator::do_md_loop(const int nstep)

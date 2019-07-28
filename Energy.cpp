@@ -26,6 +26,11 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 	this->ves                = tmp_es;
 }
 
+void Energy::calc_temperature()
+{
+	temperature = kinetic * 2. / ptr_sys->nfree * INVBOLTZMAN;
+}
+
 void Energy::calc_kinetic_energy()
 {
 	this->kinetic = 0;

@@ -21,6 +21,7 @@ class Energy
 
 	Energy(const Option& opt, System& sys, std::vector<Atom>& atomVector, PSF& psf);
 
+	double temperature;
 	double ebond, eangle, ees, elj, kinetic;
 
 	ComputeBond              vbnd;
@@ -28,6 +29,7 @@ class Energy
 	ComputeLJ                vlj;
 	ComputeES                ves;
 
+	void calc_temperature();
 	void calc_kinetic_energy();
 	void calc_force();
 	void zero_force();

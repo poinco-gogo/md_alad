@@ -47,6 +47,8 @@ class Integrator
 	void set_derived_values();
 	void set_langevin_parameters();
 
+	void scale_velocity(const double factor);
+
 	void run_position_velret(const int nstep);
 	void initial_posi_velret();
 	void position_velret_integrate();
