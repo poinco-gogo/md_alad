@@ -3,12 +3,14 @@
 #include "Output.hpp"
 using namespace std;
 
-Output::Output(ofstream* ptr_fo, System* ptr_sys, Energy* ptr_ene, vector<Atom>* ptr_atomVector)
+Output::Output(const Option& opt, System* ptr_sys, Energy* ptr_ene, vector<Atom>* ptr_atomVector)
 {
 	this->ptr_atomVector     = ptr_atomVector;
 	this->ptr_sys            = ptr_sys;
 	this->ptr_ene            = ptr_ene;
-	this->ptr_fo             = ptr_fo;
+	this->outputname         = opt.outputname;
+
+	this->fo.open(outputname + ".xyz");
 }
 
 void Output::print_energy(int istep)
@@ -38,7 +40,6 @@ void Output::print_energy(int istep)
 
 void Output::output_xyz()
 {
-	ofstream& fo = *ptr_fo;
 	static const double boxsize = ptr_sys->box_size_x;
 	fo << ptr_atomVector->size() << '\n' << '\n';
 	fo << setprecision(6) << fixed;

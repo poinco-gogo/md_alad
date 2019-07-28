@@ -22,14 +22,13 @@
 using namespace std;
 int main (int argc, char** argv)
 {
-	if (argc < 3)
+	if (argc < 2)
 	{
-		cout << "usage: ./a.out trjout config\n";
+		cout << "usage: ./a.out config\n";
 		return 1;
 	}
 	
-	ofstream fo(argv[1]);
-	Option opt(argv[2]);
+	Option opt(argv[1]);
 	if (!opt.load_config())
 		return 1;
 
@@ -55,7 +54,7 @@ int main (int argc, char** argv)
 
 	Energy     ene(opt, sys, atomVector, PSFFile);
 
-	Output out(&fo, &sys, &ene, &atomVector);
+	Output out(opt, &sys, &ene, &atomVector);
 
 	Integrator job(opt, &ene, &out, &atomVector);
 	job.set_ptr_engine(&engine);
