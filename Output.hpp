@@ -26,6 +26,7 @@ class Output
 	
 	void print_energy(int nstep);
 	void output_xyz();
+	bool output_namdbin(std::string type);
 
 };
 #endif

@@ -78,7 +78,7 @@ void NAMDBin::read_vel(ifstream& fi, vector<Atom>& atomVector)
 
 bool NAMDBin::write_fo(vector<Atom>& atomVector)
 {
-	ofstream fo(this->filename.c_str(), ios::out | ios::binary)
+	ofstream fo(this->filename.c_str(), ios::out | ios::binary);
 
 	if (!fo)
 	{
@@ -130,6 +130,6 @@ void NAMDBin::write_vel(ofstream& fo, vector<Atom>& atomVector)
 		dtmp[0] = atom.velocity.x();
 		dtmp[1] = atom.velocity.y();
 		dtmp[2] = atom.velocity.z();
-		fwrite( (char*) dtmp, sizeof(double) * 3 );
+		fo.write( (char*) dtmp, sizeof(double) * 3 );
 	}
 }

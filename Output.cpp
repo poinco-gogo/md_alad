@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include "Output.hpp"
+#include "NAMDBin.hpp"
 using namespace std;
 
 Output::Output(const Option& opt, System* ptr_sys, Energy* ptr_ene, vector<Atom>* ptr_atomVector)
@@ -73,4 +74,11 @@ void Output::output_xyz()
 		fo << " " << at2.PDBAtomName[0] << setw(20) << p2.x() << setw(20) << p2.y() << setw(20) << p2.z() << '\n';
 		fo << " " << at3.PDBAtomName[0] << setw(20) << p3.x() << setw(20) << p3.y() << setw(20) << p3.z() << '\n';
 	}
+}
+
+bool Output::output_namdbin(string type)
+{
+	NAMDBin job(this->outputname + "." + type, type);
+
+	return job.write_fo(*ptr_atomVector);
 }

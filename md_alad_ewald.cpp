@@ -75,4 +75,7 @@ int main (int argc, char** argv)
 	out.print_energy(0);
 
 	job.do_md_loop(sys.nstep);
+
+	out.output_namdbin("coor");
+	out.output_namdbin("vel");
 }
