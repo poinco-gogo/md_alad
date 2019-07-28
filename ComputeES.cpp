@@ -27,7 +27,7 @@ ComputeES::ComputeES(const Option& opt, System& sys, vector<Atom>& atomVector, P
 
 	if (boundaryType == "PBC")
 	{
-		make_reciprocal_vectors();
+		if (!usePME) make_reciprocal_vectors();
 
 		show_simulation_info_ewald();
 	}
