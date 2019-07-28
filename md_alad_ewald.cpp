@@ -18,6 +18,7 @@
 #include "Energy.hpp"
 #include "Integrator.hpp"
 #include "Output.hpp"
+#include "NAMDBin.hpp"
 #include "Lattice.hpp"
 using namespace std;
 int main (int argc, char** argv)
@@ -40,8 +41,12 @@ int main (int argc, char** argv)
 	vector<Atom> atomVector;
 	PSF PSFFile(sys.structure, &atomVector);
 	PDB PDBFile(sys.coordinates);
-	if (!PDBFile.LoadCoords(atomVector))
-		return 1;
+	if (sys.bincoordinates.size())
+	{
+		NAMDBin bincoor(sys.bincoordinates.c_str(), "coor");
+		if (!bincoor.read_fi(atomVector)) return 1;
+	}
+	else if (!PDBFile.LoadCoords(atomVector)) return 1;
 
 	if (opt.rigidBonds) PSFFile.make_water_shake_bond_array();
 
@@ -66,8 +71,13 @@ int main (int argc, char** argv)
 	cout << "REMARK gamma[ps-1] " << opt.langevinDamping_ps << '\n';
 	cout << "REMARK T[K] " << opt.langevinTemp << '\n';
 
-	/* generate initial velocities */
-	job.reassign_velocities();
+	/*  velocities at zero step */
+	if (sys.binvelocities.size())
+	{
+		NAMDBin binvel(sys.binvelocities.c_str(), "vel");
+		if (!binvel.read_fi(atomVector)) return 1;
+	}
+	else job.reassign_velocities();
 
 	ene.zero_force();
 	ene.calc_force();

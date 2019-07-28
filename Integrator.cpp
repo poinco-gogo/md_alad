@@ -130,7 +130,6 @@ void Integrator::run_position_velret(const int nstep)
 		{
 			at.rold = at.position;
 			at.position = at.rnew;
-			at.velocity = at.vnew;
 		}
 	}
 }
