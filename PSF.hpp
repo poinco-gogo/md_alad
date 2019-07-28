@@ -12,7 +12,7 @@
 class PSF 
 {
 	private:
-	int natom;
+	int natom, nwater;
 	std::string filename;
 	std::vector<Atom>* ptr_atomVector;
 	
@@ -45,6 +45,8 @@ class PSF
 	void writePDB(std::string filename, std::vector<Atom>& atomVector, std::string header);
 
 	void make_water_shake_bond_array();
+
+	double _nwater() { return nwater; }
 
 	// for internal use
 	private:

@@ -72,8 +72,7 @@ void PSF::get_atom_list(const int natom, ifstream& fi)
 	cout << "REMARK TOTAL ATOM : " << natom << '\n';
 	ptr_atomVector -> resize(natom);
 	string s;
-	string stmp;
-	int itmp;
+	this->nwater = 0;
 	for (int i = 0; i < natom; i++)
 	{
 		Atom& atom = ptr_atomVector->at(i);
@@ -92,7 +91,11 @@ void PSF::get_atom_list(const int natom, ifstream& fi)
 		   >> atom.mass;
 
 		atom.invmass = 1. / atom.mass;
+
+		if (atom.PDBAtomName == "OH2") ++nwater;
 	}
+
+	cout << "REMARK Number of water molecules: " << nwater << '\n';
 }
 
 void PSF::get_bond_list(const int nbond, ifstream& fi)
