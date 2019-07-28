@@ -163,7 +163,7 @@ void Integrator::position_velret_integrate()
 	{
 		Eigen::Vector3d
 		noise( dist(engine), dist(engine), dist(engine));
-		at.rnew = 2. * at.position - at.rold + gamma * dt_div2 * at.rold + dt * dt * at.invmass * (at.force + at.R * noise);
+		at.rnew = 2. * at.position - A * at.rold + dt * dt * at.invmass * (at.force + at.R * noise);
 		at.rnew = at.rnew * inB;
 	}
 }
