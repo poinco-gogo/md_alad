@@ -8,7 +8,7 @@
 #include "common.hpp"
 using namespace std;
 
-Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vector<Atom>* ptr_atomVector)
+Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vector<Atom>* ptr_atomVector, mt19937* ptr_engine)
 {
 	this->integrator         = opt.integrator;
 
@@ -29,6 +29,8 @@ Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vect
 
 	this->ptr_ene            = ptr_ene;
 	this->ptr_out            = ptr_out;
+
+	this->ptr_engine         = ptr_engine;
 
 	set_derived_values();
 
@@ -51,10 +53,18 @@ void Integrator::set_derived_values()
 
 void Integrator::set_langevin_parameters()
 {
+	normal_distribution<double> dist(0., 1.);
+
+	const double kbT = BOLTZMAN * langevinTemp;
+
 	for (auto& at: *ptr_atomVector)
 	{
-		at.R
-		= sqrt( 2. * BOLTZMAN * langevinTemp * gamma * at.mass / dt );
+		at.R = sqrt( 2. * kbT * gamma * at.mass / dt );
+
+		// initial random forces for velocity velret
+		at.random_f.x() = at.R * dist(*ptr_engine);
+		at.random_f.y() = at.R * dist(*ptr_engine);
+		at.random_f.z() = at.R * dist(*ptr_engine);
 	}
 }
 
@@ -96,6 +106,8 @@ void Integrator::do_md_loop(const int nstep)
 {
 	if (this->integrator == "POSI")
 		run_position_velret(nstep);
+	else if (this->integrator == "VVER")
+		run_velocity_velret(nstep);
 }
 
 void Integrator::run_position_velret(const int nstep)
@@ -171,4 +183,67 @@ void Integrator::position_velret_velocity()
 {
 	for (auto& at: *ptr_atomVector)
 		at.velocity = 0.5 / dt * (at.rnew - at.rold);
+}
+
+void Integrator::run_velocity_velret(const int nstep)
+{
+	Energy& ene = *ptr_ene;
+	Output& out = *ptr_out;
+
+	for (int istep = 1; istep <= nstep; istep++)
+	{
+		velocity_velret_integrate_step1();
+
+		ene.zero_force();
+		ene.calc_force();
+
+		velocity_velret_integrate_step2();
+
+		ene.calc_kinetic_energy();
+
+		if (istep % print_energy_step== 0)
+			out.print_energy(istep);
+
+		if (istep % print_trj_step== 0)
+			out.output_xyz();
+	}
+}
+
+void Integrator::velocity_velret_integrate_step1()
+{
+	for (auto& at: *ptr_atomVector)
+	{
+		at.vnew = A * at.velocity
+			+ at.invmass * dt * 0.5 * (at.force + at.random_f);
+
+		at.rnew = at.position + dt * at.vnew;
+	}
+
+	if (rigidBonds && !ptr_ene->vbnd.do_rattle_loop1())
+		die("error: rattle does not converged!");
+
+	for (auto& at: *ptr_atomVector)
+		at.position = at.rnew;
+}
+
+void Integrator::velocity_velret_integrate_step2()
+{
+	normal_distribution<double> dist(0., 1.);
+
+	for (auto& at: *ptr_atomVector)
+	{
+		at.random_f.x() = at.R * dist(*ptr_engine);
+		at.random_f.y() = at.R * dist(*ptr_engine);
+		at.random_f.z() = at.R * dist(*ptr_engine);
+
+		at.vnew += at.invmass * dt * 0.5 * (at.force + at.random_f);
+
+		at.vnew *= inB;
+	}
+
+	if (rigidBonds && !ptr_ene->vbnd.do_rattle_loop2())
+		die("error: rattle does not converged!");
+
+	for (auto& at: *ptr_atomVector)
+		at.velocity = at.vnew;
 }

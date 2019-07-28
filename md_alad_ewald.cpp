@@ -61,8 +61,7 @@ int main (int argc, char** argv)
 
 	Output out(opt, &sys, &ene, &atomVector);
 
-	Integrator job(opt, &ene, &out, &atomVector);
-	job.set_ptr_engine(&engine);
+	Integrator job(opt, &ene, &out, &atomVector, &engine);
 
 	sys.nfree = 3 * atomVector.size() - ene.vbnd._num_shake_bond();
 

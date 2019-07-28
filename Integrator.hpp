@@ -37,7 +37,7 @@ class Integrator
 
 	public:
 
-	Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, std::vector<Atom>* ptr_atomVector);
+	Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, std::vector<Atom>* ptr_atomVector, std::mt19937* ptr_engine);
 	void set_ptr_engine(std::mt19937* ptr_engine);
 	void reassign_velocities();
 	void do_md_loop(const int nstep);
@@ -55,5 +55,7 @@ class Integrator
 	void position_velret_velocity();
 
 	void run_velocity_velret(const int nstep);
+	void velocity_velret_integrate_step1();
+	void velocity_velret_integrate_step2();
 };
 #endif
