@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <ctime>
 #include <random>
+#include <chrono>
 #include "common.hpp"
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -83,7 +84,14 @@ int main (int argc, char** argv)
 	ene.calc_kinetic_energy();
 	out.print_energy(0);
 
+	auto start = std::chrono::system_clock::now();
 	job.do_md_loop(sys.nstep);
+	auto end   = std::chrono::system_clock::now();
+	auto dur   = end - start;
+	double msec
+	= std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+	cout << "REMARK ----------------------------------\n"
+		"REMARK elapsed:  " << msec / 1000 << " sec.\n\n";
 
 	out.output_namdbin("coor");
 	out.output_namdbin("vel");
