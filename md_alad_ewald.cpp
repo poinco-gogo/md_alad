@@ -30,35 +30,40 @@ int main (int argc, char** argv)
 		cout << "usage: ./a.out config\n";
 		return 1;
 	}
+
+	cout << "REMARK ";
+	for (int i = 0; i < argc; i++)
+		cout << argv[i] << ' ';
+	cout << '\n';
 	
 	Option opt(argv[1]);
 	if (!opt.load_config())
 		return 1;
 
-	System     sys(opt);
-
-	Random random(sys.iseed);
-
 	vector<Atom> atomVector;
-	PSF PSFFile(sys.structure, &atomVector);
-	PDB PDBFile(sys.coordinates);
-	if (sys.bincoordinates.size())
+	PSF PSFFile(opt.structure, &atomVector);
+	PDB PDBFile(opt.coordinates);
+	if (opt.bincoordinates.size())
 	{
-		NAMDBin bincoor(sys.bincoordinates.c_str(), "coor");
+		NAMDBin bincoor(opt.bincoordinates.c_str(), "coor");
 		if (!bincoor.read_fi(atomVector)) return 1;
 	}
 	else if (!PDBFile.LoadCoords(atomVector)) return 1;
 
 	if (opt.rigidBonds) PSFFile.make_water_shake_bond_array();
 
-	LoadParm ALL22(sys.parameters);
+	LoadParm ALL22(opt.parameters);
 	if (!PSFFile.set_bond_parm(ALL22.bondParmVector)) return 0;
 	if (!PSFFile.set_angle_parm(ALL22.angleParmVector)) return 0;
 	if (!PSFFile.set_lj_parm(ALL22.LJParmVector)) return 0;
 
 	PSFFile.make_exclusion_vector();
 
-	Energy     ene(opt, sys, atomVector, PSFFile);
+	System sys(opt);
+
+	Random random(sys.iseed);
+
+	Energy ene(opt, sys, atomVector, PSFFile);
 
 	Output out(opt, &sys, &ene, &atomVector);
 
@@ -69,9 +74,9 @@ int main (int argc, char** argv)
 	cout << "REMARK Degrees of freedom " << sys.nfree << '\n';
 
 	/*  velocities at zero step */
-	if (sys.binvelocities.size())
+	if (opt.binvelocities.size())
 	{
-		NAMDBin binvel(sys.binvelocities.c_str(), "vel");
+		NAMDBin binvel(opt.binvelocities.c_str(), "vel");
 		if (!binvel.read_fi(atomVector)) return 1;
 	}
 	else job.reassign_velocities();
