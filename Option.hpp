@@ -45,6 +45,8 @@ class Option
 
 	private:
 
+	bool consistency_check();
+
 	bool stobool(std::string);
 };
 #endif

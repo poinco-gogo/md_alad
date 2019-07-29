@@ -22,9 +22,14 @@ const double RAD2DEG = 180. / PI;
 const double BAR2CAL = 6.022141 / 4.184 * 1e-5;
 const double CAL2BAR = 1. / BAR2CAL;
 
+inline void err(std::string error_message)
+{
+	std::cerr << "\nerror: " << error_message << "\n\n";
+}
+
 inline void die(std::string error_message)
 {
-	std::cerr << "\n" << error_message << "\n\n";
+	std::cerr << '\n' << error_message << "\n\n";
 	exit(1);
 }
 #endif

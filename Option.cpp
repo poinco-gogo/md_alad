@@ -4,6 +4,7 @@
 #include <ctime>
 #include <algorithm>
 #include "Option.hpp"
+#include "common.hpp"
 using namespace std;
 Option::Option(string filename)
 {
@@ -54,6 +55,14 @@ void Option::reset()
 bool Option::load_config()
 {
 	ifstream fc(filename.c_str());
+
+	if (!fc)
+	{
+		string stmp =
+		"input file \"" + filename + "\" does not exist.";
+		err(stmp);
+		return false;
+	}
 
 	string s;
 	while (getline(fc, s))
@@ -218,18 +227,30 @@ bool Option::load_config()
 		}
 	}
 
-	// consistency check
-	if (this->binvelocities.size() && this->initialTemp > 0)
-	{
-		cerr << "\nerror: binvelocities and temperature are mutually exclusive parameters.\n";
-		return false;
-	}
+	if ( !consistency_check() ) return false;
 
 	// set seed value if iseed .eq. -1
 	if (this->iseed == -1)
 	{
 		this->iseed = time(NULL);
 	}
+}
+
+bool Option::consistency_check()
+{
+	if (binvelocities.size() && initialTemp > 0)
+	{
+		err("binvelocities and temperature are mutually exclusive parameters.");
+		return false;
+	}
+
+	if (outputname == "")
+	{
+		err("please specify outputname");
+		return false;
+	}
+
+	return true;
 }
 
 bool Option::stobool(string s)
