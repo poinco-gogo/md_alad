@@ -7,6 +7,7 @@
 #include "System.hpp"
 #include "Energy.hpp"
 #include "Atom.hpp"
+#include "uiuc/dcdplugin.h"
 
 class Output
 {
@@ -15,6 +16,8 @@ class Output
 	std::vector<Atom>* ptr_atomVector;
 	System* ptr_sys;
 	Energy* ptr_ene;
+	dcdhandle* dcd;
+	molfile_timestep_t ts;
 
 	std::ofstream fo;
 
@@ -26,7 +29,12 @@ class Output
 	
 	void print_energy(int nstep);
 	void output_xyz();
+	void output_dcd();
 	bool output_namdbin(std::string type);
+	void close_dcd();
 
+	private:
+
+	void open_dcd_write();
 };
 #endif

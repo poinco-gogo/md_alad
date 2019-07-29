@@ -136,7 +136,7 @@ void Integrator::run_position_velret(const int nstep)
 			out.print_energy(istep);
 
 		if (istep % print_trj_step== 0)
-			out.output_xyz();
+			out.output_dcd();
 
 		for (auto& at: *ptr_atomVector)
 		{
@@ -205,7 +205,7 @@ void Integrator::run_velocity_velret(const int nstep)
 			out.print_energy(istep);
 
 		if (istep % print_trj_step== 0)
-			out.output_xyz();
+			out.output_dcd();
 	}
 }
 

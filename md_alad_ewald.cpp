@@ -87,4 +87,6 @@ int main (int argc, char** argv)
 
 	out.output_namdbin("coor");
 	out.output_namdbin("vel");
+
+	out.close_dcd();
 }

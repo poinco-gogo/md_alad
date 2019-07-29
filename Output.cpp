@@ -11,7 +11,24 @@ Output::Output(const Option& opt, System* ptr_sys, Energy* ptr_ene, vector<Atom>
 	this->ptr_ene            = ptr_ene;
 	this->outputname         = opt.outputname;
 
-	this->fo.open(outputname + ".xyz");
+	//this->fo.open(outputname + ".xyz");
+	this->open_dcd_write();
+}
+
+void Output::open_dcd_write()
+{
+	char ctmp;
+	int with_unitcell = 0;
+
+	if (ptr_sys->boundaryType == "PBC") with_unitcell = 1;
+
+	this->dcd = ::open_dcd_write(
+			(outputname + ".dcd").c_str(),
+			&ctmp,
+			ptr_atomVector->size(),
+			with_unitcell );
+
+	ts.coords = (float *)malloc(dcd->natoms * 3 * sizeof(float));
 }
 
 void Output::print_energy(int istep)
@@ -76,9 +93,29 @@ void Output::output_xyz()
 	}
 }
 
+void Output::output_dcd()
+{
+	for (int i = 0; i < ptr_atomVector->size(); i++)
+	{
+		Atom& at = ptr_atomVector->at(i);
+
+		ts.coords[3 * i    ] = at.position.x();
+		ts.coords[3 * i + 1] = at.position.y();
+		ts.coords[3 * i + 2] = at.position.z();
+	}
+
+	::write_timestep(dcd, &ts);
+}
+
 bool Output::output_namdbin(string type)
 {
 	NAMDBin job(this->outputname + "." + type, type);
 
 	return job.write_fo(*ptr_atomVector);
+}
+
+void Output::close_dcd()
+{
+	close_file_write( dcd );
+	free( ts.coords );
 }
