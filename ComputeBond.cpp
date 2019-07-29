@@ -15,12 +15,12 @@ ComputeBond::ComputeBond(const Option& opt, vector<Bond>& bondVector)
 	this -> rigidTolerance  = opt.rigidTolerance;
 	this -> rigidIterations = opt.rigidIterations;
 
-	cout << "REMARK RIGID BONDS : ";
+	cout << "REMARK Rigid X-H bonds : ";
 	if (rigidBonds)
 	{
-		cout << "ALL\n";
-		cout << "REMARK         ERROR TOLERANCE : " << rigidTolerance << '\n';
-		cout << "REMARK          MAX ITERATIONS : " << rigidIterations << '\n';
+		cout << "all\n";
+		cout << "REMARK     error tolerance : " << rigidTolerance << '\n';
+		cout << "REMARK     max iterations  : " << rigidIterations << '\n';
 		make_shake_bond_index();
 	}
 	else
