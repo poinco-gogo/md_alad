@@ -79,6 +79,13 @@ void System::show_simulation_info()
 		<< '\n';
 	}
 
+	if (this->binvelocities.size())
+	{
+		cout
+		<< "REMARK RESTART VELOCITIES     " << this->binvelocities
+		<< '\n';
+	}
+
 	if (this->boundaryType == "PBC")
 	{
 		cout << "REMARK Periodic boundary condition:\n"
