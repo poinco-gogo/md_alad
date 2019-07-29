@@ -43,12 +43,6 @@ void Integrator::set_derived_values()
 	this->dt    = dt_ps * PS2ASU;
 	this->dt_div2 = dt / 2.;
 	this->dtdt_div2 = dt * dt / 2.;
-
-	this->gamma_ps = this->langevinDamping_ps;
-	this->gamma    = this->gamma_ps / PS2ASU;
-	this->A        = 1. - this->gamma * dt * 0.5;
-	this->B        = 1. + this->gamma * dt * 0.5;
-	this->inB      = 1. / B;
 }
 
 void Integrator::set_langevin_parameters()
@@ -56,6 +50,12 @@ void Integrator::set_langevin_parameters()
 	normal_distribution<double> dist(0., 1.);
 
 	const double kbT = BOLTZMAN * langevinTemp;
+
+	this->gamma_ps = this->langevinDamping_ps;
+	this->gamma    = this->gamma_ps / PS2ASU;
+	this->A        = 1. - this->gamma * dt * 0.5;
+	this->B        = 1. + this->gamma * dt * 0.5;
+	this->inB      = 1. / B;
 
 	for (auto& at: *ptr_atomVector)
 	{
