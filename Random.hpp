@@ -8,13 +8,13 @@ class Random
 {
 	private:
 	
-	int iseed;
+	unsigned int iseed;
 	std::mt19937 engine;
 	std::normal_distribution<double> dist;
 
 	public:
 
-	Random(int iseed);
+	Random(unsigned int iseed);
 
 	double gaussian();
 	Eigen::Vector3d gaussian_vector();

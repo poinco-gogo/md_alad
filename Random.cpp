@@ -2,7 +2,7 @@
 #include "Random.hpp"
 using namespace std;
 
-Random::Random(int iseed)
+Random::Random(unsigned int iseed)
 {
 	this->iseed       = iseed;
 	this->engine.seed(iseed);

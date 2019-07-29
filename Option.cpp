@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <ctime>
 #include <algorithm>
+#include <random>
 #include "Option.hpp"
 #include "common.hpp"
 using namespace std;
@@ -232,7 +232,8 @@ bool Option::load_config()
 	// set seed value if iseed .eq. -1
 	if (this->iseed == -1)
 	{
-		this->iseed = time(NULL);
+		random_device rnd;
+		this->iseed = rnd();
 	}
 }
 

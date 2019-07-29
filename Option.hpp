@@ -36,7 +36,7 @@ class Option
 	int ewald_kmax, pme_grid_x, pme_grid_y, pme_grid_z, pme_spline_order;
 	double ewald_tolerance;
 
-	int iseed;
+	unsigned int iseed;
 
 	double dt_fs;
 

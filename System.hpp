@@ -24,7 +24,7 @@ class System
 	bool wrapAll;
 	double box_size_x, box_size_y, box_size_z;
 
-	int iseed;
+	unsigned int iseed;
 
 	Lattice lattice;
 
