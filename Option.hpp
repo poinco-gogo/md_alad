@@ -26,7 +26,8 @@ class Option
         double rigidTolerance;
         int    rigidIterations;
 
-	std::string boundaryType, wrapAll;
+	std::string boundaryType;
+	bool wrapAll;
 	double box_size_x, box_size_y, box_size_z;
 
 	double cutoff;

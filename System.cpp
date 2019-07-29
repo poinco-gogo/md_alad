@@ -89,7 +89,7 @@ void System::show_simulation_info()
 		cout << "REMARK NO Periodic boundary condition\n";
 	}
 
-	if (this->wrapAll == "on")
+	if (this->wrapAll)
 	{
 		cout << "REMARK WRAPPING ALL CLUSTERS AROUND PERIODIC BOUNDARIES ON OUTPUT.\n";
 	}

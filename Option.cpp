@@ -27,7 +27,7 @@ void Option::reset()
 	rigidIterations = 100;
 
 	boundaryType = "NOBC";
-	wrapAll      = "no";
+	wrapAll      = false;
 	box_size_x = 0;
 	box_size_y = 0;
 	box_size_z = 0;
@@ -189,7 +189,8 @@ bool Option::load_config()
 		}
 		else if (s.find("wrapAll", 0) != string::npos)
 		{
-			is >> stmp >> this->wrapAll;
+			is >> stmp >> stmp;
+			this->wrapAll = stobool(stmp);
 		}
 		else if (s.find("timestep", 0) != string::npos)
 		{
