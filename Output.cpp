@@ -104,6 +104,10 @@ void Output::output_dcd()
 		ts.coords[3 * i + 2] = at.position.z();
 	}
 
+	ts.A = ptr_sys->lattice._x();
+	ts.B = ptr_sys->lattice._y();
+	ts.C = ptr_sys->lattice._z();
+
 	::write_timestep(dcd, &ts);
 }
 
