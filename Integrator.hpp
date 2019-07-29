@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <random>
+#include "Random.hpp"
 #include "Atom.hpp"
 #include "Option.hpp"
 #include "Output.hpp"
@@ -13,7 +14,7 @@ class Integrator
 {
 	private:
 
-	std::mt19937* ptr_engine;
+	Random* ptr_random;
 
 	std::vector<Atom>* ptr_atomVector;
 
@@ -37,8 +38,8 @@ class Integrator
 
 	public:
 
-	Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, std::vector<Atom>* ptr_atomVector, std::mt19937* ptr_engine);
-	void set_ptr_engine(std::mt19937* ptr_engine);
+	Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, std::vector<Atom>* ptr_atomVector, Random* ptr_random);
+
 	void reassign_velocities();
 	void do_md_loop(const int nstep);
 

@@ -8,7 +8,7 @@
 #include "common.hpp"
 using namespace std;
 
-Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vector<Atom>* ptr_atomVector, mt19937* ptr_engine)
+Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vector<Atom>* ptr_atomVector, Random* ptr_random)
 {
 	this->integrator         = opt.integrator;
 
@@ -30,7 +30,7 @@ Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vect
 	this->ptr_ene            = ptr_ene;
 	this->ptr_out            = ptr_out;
 
-	this->ptr_engine         = ptr_engine;
+	this->ptr_random         = ptr_random;
 
 	set_derived_values();
 
@@ -47,8 +47,6 @@ void Integrator::set_derived_values()
 
 void Integrator::set_langevin_parameters()
 {
-	normal_distribution<double> dist(0., 1.);
-
 	const double kbT = BOLTZMAN * langevinTemp;
 
 	this->gamma_ps = this->langevinDamping_ps;
@@ -62,30 +60,19 @@ void Integrator::set_langevin_parameters()
 		at.R = sqrt( 2. * kbT * gamma * at.mass / dt );
 
 		// initial random forces for velocity velret
-		at.random_f.x() = at.R * dist(*ptr_engine);
-		at.random_f.y() = at.R * dist(*ptr_engine);
-		at.random_f.z() = at.R * dist(*ptr_engine);
+		at.random_f = at.R * ptr_random->gaussian_vector();
 	}
-}
-
-void Integrator::set_ptr_engine(mt19937* ptr_engine)
-{
-	this->ptr_engine = ptr_engine;
 }
 
 void Integrator::reassign_velocities()
 {
-	normal_distribution<double> dist(0., 1);
-
 	double kbT = BOLTZMAN * langevinTemp;
 
 	for (auto& at: *ptr_atomVector)
 	{
 		double kbT_imass = kbT * at.invmass;
 
-		at.velocity.x() = dist( *ptr_engine ) * sqrt( kbT_imass );
-		at.velocity.y() = dist( *ptr_engine ) * sqrt( kbT_imass );
-		at.velocity.z() = dist( *ptr_engine ) * sqrt( kbT_imass );
+		at.velocity = ptr_random->gaussian_vector() * sqrt( kbT_imass );
 	}
 
 	ptr_ene->calc_kinetic_energy();
@@ -167,13 +154,9 @@ void Integrator::initial_posi_velret()
 
 void Integrator::position_velret_integrate()
 {
-	mt19937& engine = *ptr_engine;
-	normal_distribution<double> dist(0., 1.);
-
 	for (auto& at: *ptr_atomVector)
 	{
-		Eigen::Vector3d
-		noise( dist(engine), dist(engine), dist(engine));
+		Eigen::Vector3d noise = ptr_random->gaussian_vector();
 		at.rnew = 2. * at.position - A * at.rold + dt * dt * at.invmass * (at.force + at.R * noise);
 		at.rnew = at.rnew * inB;
 	}
@@ -228,13 +211,9 @@ void Integrator::velocity_velret_integrate_step1()
 
 void Integrator::velocity_velret_integrate_step2()
 {
-	normal_distribution<double> dist(0., 1.);
-
 	for (auto& at: *ptr_atomVector)
 	{
-		at.random_f.x() = at.R * dist(*ptr_engine);
-		at.random_f.y() = at.R * dist(*ptr_engine);
-		at.random_f.z() = at.R * dist(*ptr_engine);
+		at.random_f = at.R * ptr_random->gaussian_vector();
 
 		at.vnew += at.invmass * dt * 0.5 * (at.force + at.random_f);
 

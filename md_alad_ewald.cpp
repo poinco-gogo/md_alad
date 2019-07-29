@@ -21,6 +21,7 @@
 #include "Output.hpp"
 #include "NAMDBin.hpp"
 #include "Lattice.hpp"
+#include "Random.hpp"
 using namespace std;
 int main (int argc, char** argv)
 {
@@ -36,8 +37,7 @@ int main (int argc, char** argv)
 
 	System     sys(opt);
 
-	mt19937 engine(static_cast<unsigned int>(sys.iseed));
-	normal_distribution<double> dist(0., 1.);
+	Random random(sys.iseed);
 
 	vector<Atom> atomVector;
 	PSF PSFFile(sys.structure, &atomVector);
@@ -62,7 +62,7 @@ int main (int argc, char** argv)
 
 	Output out(opt, &sys, &ene, &atomVector);
 
-	Integrator job(opt, &ene, &out, &atomVector, &engine);
+	Integrator job(opt, &ene, &out, &atomVector, &random);
 
 	sys.nfree = 3 * atomVector.size() - ene.vbnd._num_shake_bond();
 
