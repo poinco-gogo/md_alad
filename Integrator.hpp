@@ -45,6 +45,7 @@ class Integrator
 
 	private:
 
+	void show_simulation_info();
 	void set_derived_values();
 	void set_langevin_parameters();
 

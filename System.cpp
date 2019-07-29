@@ -40,6 +40,8 @@ System::System(const Option& opt)
 	}
 
 	this->nfree = 0;
+
+	show_simulation_info();
 }
 
 void System::make_lattice(double x, double y, double z)

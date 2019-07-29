@@ -35,6 +35,25 @@ Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vect
 	set_derived_values();
 
 	if (this->langevin) set_langevin_parameters();
+
+	show_simulation_info();
+}
+
+void Integrator::show_simulation_info()
+{
+	cout
+	<< "REMARK Timestep (fs)   : " << dt_fs << '\n'
+	<< "REMARK Integrator      : " << integrator << '\n';
+
+	if (langevin)
+	{
+		cout
+		<< "REMARK ------------------\n"
+		<< "REMARK Langevin                            : " << "yes\n"
+		<< "REMARK Langevin temperature (K)            : " << langevinTemp << '\n'
+		<< "REMARK Langevin damping coefficient (ps-1) : " << langevinDamping_ps << '\n'
+		<< "REMARK ------------------\n";
+	}
 }
 
 void Integrator::set_derived_values()

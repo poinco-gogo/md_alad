@@ -67,9 +67,6 @@ int main (int argc, char** argv)
 	sys.nfree = 3 * atomVector.size() - ene.vbnd._num_shake_bond();
 
 	cout << "REMARK Degrees of freedom " << sys.nfree << '\n';
-	cout << "REMARK dt[fs] " << opt.dt_fs << '\n';
-	cout << "REMARK gamma[ps-1] " << opt.langevinDamping_ps << '\n';
-	cout << "REMARK T[K] " << opt.langevinTemp << '\n';
 
 	/*  velocities at zero step */
 	if (sys.binvelocities.size())
