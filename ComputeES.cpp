@@ -75,14 +75,18 @@ double ComputeES::compute_force()
 {
 	double sum_energy = 0;
 
-	if (this->boundaryType == "PBC")
-	{
+	if (boundaryType == "PBC")
 		sum_energy = compute_ewald_force();
+	else
+		sum_energy = compute_nobc_force();
 
-		return sum_energy;
-	}
+	return sum_energy;
+}
 
-	// NOBC case
+double ComputeES::compute_nobc_force()
+{
+	double sum_energy = 0;
+
 	for (int i = 0; i < ptr_atomVector->size(); i++)
 	{
 		Atom& iat = ptr_atomVector->at(i);

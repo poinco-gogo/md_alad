@@ -27,15 +27,17 @@ class ComputeES
 	double tensor[6];
 	ComputeES(){}
 	ComputeES(const Option& opt, System& sys, std::vector<Atom>& atomVector, PSF& psf);
-	void   make_reciprocal_vectors();
 	double compute_force();
-	double compute_ewald_force();
-	double compute_pair_energy(Atom& at1, Atom& at2);
-	Eigen::Vector3d compute_pair_force(Atom& at1, Atom& at2);
 
 	private:
+
+	void make_reciprocal_vectors();
 	void show_simulation_info_ewald();
 	double calc_ewcoef();
+	double compute_ewald_force();
+	double compute_nobc_force();
+	double compute_pair_energy(Atom& at1, Atom& at2);
+	Eigen::Vector3d compute_pair_force(Atom& at1, Atom& at2);
 	double calc_ewald_recip_direct();
 	double calc_ewald_recip_pme();
 };
