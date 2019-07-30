@@ -75,14 +75,10 @@ double ComputeES::calc_ewcoef()
 
 double ComputeES::compute_force()
 {
-	double sum_energy = 0;
-
 	if (boundaryType == "PBC")
-		sum_energy = compute_ewald_force();
+		return compute_ewald_force();
 	else
-		sum_energy = compute_nobc_force();
-
-	return sum_energy;
+		return compute_nobc_force();
 }
 
 double ComputeES::compute_nobc_force()
