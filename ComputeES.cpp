@@ -31,6 +31,8 @@ ComputeES::ComputeES(const Option& opt, System& sys, vector<Atom>& atomVector, P
 
 		show_simulation_info_ewald();
 	}
+
+	this->ewald_self_energy = calc_ewald_self();
 }
 
 void ComputeES::show_simulation_info_ewald()
@@ -182,16 +184,7 @@ double ComputeES::compute_ewald_force()
 
 
 	// Ewald self term
-	for (int i = 0; i < ptr_atomVector->size(); i++)
-	{
-		double qiqi = ptr_atomVector->at(i).charge;
-
-		qiqi *= qiqi;
-
-		Uself += qiqi;
-	}
-	Uself *= -ewcoef / SQRTPI * COULOMB;
-
+	Uself       = ewald_self_energy;
 	sum_energy += Uself;
 
 
@@ -268,6 +261,23 @@ double ComputeES::compute_ewald_force()
 	//cout << "DEBUG: es: " << tensor[0] << " " << tensor[2] << " " << tensor[5] << '\n';
 
 	return sum_energy;
+}
+
+double ComputeES::calc_ewald_self()
+{
+	double result = 0;
+
+	for (auto& at: *ptr_atomVector)
+	{
+		double qi = at.charge;
+
+		double qiqi = qi * qi;
+
+		result += qiqi;
+	}
+	result *= -ewcoef / SQRTPI * COULOMB;
+
+	return result;
 }
 
 double ComputeES::calc_ewald_recip_pme()

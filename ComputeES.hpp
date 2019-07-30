@@ -22,6 +22,7 @@ class ComputeES
 	bool usePME;
 	int pme_grid_x, pme_grid_y, pme_grid_z, pme_spline_order;
 	double cutoff, ewcoef, ewald_kmax, cutoff2, ewcoef2, ewald_tolerance;
+	double ewald_self_energy;
 
 	public:
 	double tensor[6];
@@ -38,6 +39,8 @@ class ComputeES
 	double compute_nobc_force();
 	double compute_pair_energy(Atom& at1, Atom& at2);
 	Eigen::Vector3d compute_pair_force(Atom& at1, Atom& at2);
+
+	double calc_ewald_self();
 	double calc_ewald_recip_direct();
 	double calc_ewald_recip_pme();
 };
