@@ -172,9 +172,7 @@ double ComputeES::calc_ewald_self()
 	{
 		double qi = at.charge;
 
-		double qiqi = qi * qi;
-
-		result += qiqi;
+		result += qi * qi;
 	}
 	result *= -ewcoef / SQRTPI * COULOMB;
 
@@ -387,13 +385,15 @@ double ComputeES::calc_ewald_recip_direct()
 
 	static complex<double> II(0., 1.);
 
+	static const double piv = 4. * PI / ptr_lattice->volume() * COULOMB;
+
 	// loop over reciprocal lattice vectors
-	for (int i = 0; i < g.size(); i++)
+	for (Eigen::Vector3d& g1: g)
 	{
-		double g2 = g[i].squaredNorm();
+		double g2 = g1.squaredNorm();
 		
 		double dtmp;
-		g[i].z() ? dtmp = 1. : dtmp = 0.5;
+		g1.z() ? dtmp = 1. : dtmp = 0.5;
 
 		double fac1 = exp(-g2 * 0.25 / ewcoef2) / g2;
 
@@ -402,53 +402,48 @@ double ComputeES::calc_ewald_recip_direct()
 
 		complex<double> sg(0., 0.);
 
-		for (int j = 0; j < ptr_atomVector->size(); j++)
+		for (auto& at: *ptr_atomVector)
 		{
-			Atom& jat = ptr_atomVector->at(j);
+			double dot = g1.dot( at.position );
 
-			double dot = g[i].dot( jat.position );
+			sg += at.charge * exp(II * dot);
 
-			sg += jat.charge * exp(II * dot);
-
-//			re += jat.charge * cos(dot);
-//			im += jat.charge * sin(dot);
+//			re += at.charge * cos(dot);
+//			im += at.charge * sin(dot);
 		}
 
 		complex<double> conj_sg = conj(sg);
 
-		for (int j = 0; j < ptr_atomVector->size(); j++)
+		for (auto& at: *ptr_atomVector)
 		{
-			Atom& jat = ptr_atomVector->at(j);
+			double dot = g1.dot( at.position );
 
-			double dot = g[i].dot( jat.position );
-
-			complex<double> pre = II * jat.charge * exp(II * dot);
+			complex<double> pre = II * at.charge * exp(II * dot);
 
 			vector< complex<double> > dsgdrj(3);
 
-			dsgdrj[0] = pre * g[i].x();
-			dsgdrj[1] = pre * g[i].y();
-			dsgdrj[2] = pre * g[i].z();
+			dsgdrj[0] = pre * g1.x();
+			dsgdrj[1] = pre * g1.y();
+			dsgdrj[2] = pre * g1.z();
 
 			dsgdrj[0] *= conj_sg;
 			dsgdrj[1] *= conj_sg;
 			dsgdrj[2] *= conj_sg;
 
 			Eigen::Vector3d f;
-			double pre2 = -2. * fac1 * dtmp * 4. * PI / ptr_lattice->volume() * COULOMB;
+			double pre2 = -2. * fac1 * dtmp * piv;
 			f.x() = pre2 * real(dsgdrj[0]);
 			f.y() = pre2 * real(dsgdrj[1]);
 			f.z() = pre2 * real(dsgdrj[2]);
 
-			jat.force += f;
+			at.force += f;
 		}
-
 
 		Urec += dtmp * fac1 * real(sg * conj(sg));
 		//Urec += dtmp * fac1 * sg.squaredNorm();
 	}
 
-	Urec *= 4. * PI / ptr_lattice->volume() * COULOMB;
+	Urec *= piv;
 
 	return Urec;
 }
