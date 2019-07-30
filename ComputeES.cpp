@@ -133,53 +133,11 @@ double ComputeES::compute_ewald_force()
 	double Uintra  = 0;
 	double Urec    = 0;
 
-	Lattice lattice = *ptr_lattice;
-
 	for (int i = 0; i < 6; i++)
 		tensor[i] = 0.;
 
 	// Ewald real space summation.
-	for (int i = 0; i < ptr_atomVector->size(); i++)
-	{
-		Atom& iat = ptr_atomVector->at(i);
-
-		double qi    = iat.charge;
-		Eigen::Vector3d ipos = iat.position;
-
-		for (int j = i + 1; j < ptr_atomVector->size(); j++)
-		{
-			Atom& jat = ptr_atomVector->at(j);
-
-			// skip if they are 1-2, 1-3 pair.
-			if (iat.checkExclusionPair(jat)) continue;
-
-			// nearest image convention.
-			Eigen::Vector3d del = lattice.delta(ipos, jat.position);
-			double r2 = del.squaredNorm();
-
-			if (r2 > cutoff2) continue;
-			
-			double r = sqrt(r2);
-
-			double qiqj = qi * jat.charge * COULOMB;
-
-			double fac1 = erfcl( ewcoef * r ) / r;
-
-			double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2*r2);
-
-			Udirect  += qiqj * fac1;
-
-			Eigen::Vector3d f = qiqj * (fac1 + fac2) / r2 * del;
-
-			iat.force += f;
-			jat.force -= f;
-
-//			tensor[0] += f.x() * del.x();
-//			tensor[2] += f.y() * del.y();
-//			tensor[5] += f.z() * del.z();
-		}
-	}
-
+	Udirect     = calc_ewald_real();
 	sum_energy += Udirect;
 
 
@@ -189,64 +147,7 @@ double ComputeES::compute_ewald_force()
 
 
 	// Ewald reciprocal intra term
-	for (auto& bond: ptr_psf->bondVector)
-	{
-		// skip dummy bond ... e.g., HT - HT
-		if (bond.Kb == 0) continue;
-
-		Atom* at1 = bond.ptr_atom1;
-		Atom* at2 = bond.ptr_atom2;
-
-		Eigen::Vector3d del = lattice.delta(at1->position, at2->position);
-
-		double r2   = del.squaredNorm();
-		double  r   = sqrt(r2);
-
-		double fac1 = erfl(ewcoef * r) / r;
-		double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2 * r2);
-
-		double q1q2 = at1->charge * at2->charge * COULOMB;
-
-		Eigen::Vector3d f   = q1q2 * (fac1 - fac2) / r2 * del;
-		
-		Uintra     += fac1 * q1q2;
-
-		// intra force must be subtracted.
-		at1->force -= f;
-		at2->force += f;
-
-//		tensor[0] -= f.x() * del.x();
-//		tensor[2] -= f.y() * del.y();
-//		tensor[5] -= f.z() * del.z();
-	}
-
-	for (auto& angle: ptr_psf->angleVector)
-	{
-		Atom* at1 = angle.ptr_atom1;
-		Atom* at3 = angle.ptr_atom3;
-
-		Eigen::Vector3d del = lattice.delta(at1->position, at3->position);
-
-		double r2   = del.squaredNorm();
-		double  r   = sqrt(r2);
-
-		double fac1 = erfl(ewcoef * r) / r;
-		double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2 * r2);
-
-		double q1q3 = at1->charge * at3->charge * COULOMB;
-
-		Eigen::Vector3d f   = q1q3 * (fac1 - fac2) / r2 * del;
-		
-		Uintra     += fac1 * q1q3;
-
-		// intra force must be subtracted.
-		at1->force -= f;
-		at3->force += f;
-
-//		tensor[0] -= f.x() * del.x();
-//		tensor[2] -= f.y() * del.y();
-//		tensor[5] -= f.z() * del.z();
-	}
+	Uintra      = calc_ewald_intra();
 
 	// intra energy must be subtracted.
 	sum_energy -= Uintra;
@@ -278,6 +179,145 @@ double ComputeES::calc_ewald_self()
 	result *= -ewcoef / SQRTPI * COULOMB;
 
 	return result;
+}
+
+double ComputeES::calc_ewald_real()
+{
+	Lattice& lattice = *ptr_lattice;
+
+	double sum_energy = 0;
+
+	for (int i = 0; i < ptr_atomVector->size(); i++)
+	{
+		Atom& iat = ptr_atomVector->at(i);
+
+		double qi    = iat.charge;
+		Eigen::Vector3d ipos = iat.position;
+
+		for (int j = i + 1; j < ptr_atomVector->size(); j++)
+		{
+			Atom& jat = ptr_atomVector->at(j);
+
+			// skip if they are 1-2, 1-3 pair.
+			if (iat.checkExclusionPair(jat)) continue;
+
+			// nearest image convention.
+			Eigen::Vector3d del = lattice.delta(ipos, jat.position);
+			double r2 = del.squaredNorm();
+
+			if (r2 > cutoff2) continue;
+			
+			double r = sqrt(r2);
+
+			double qiqj = qi * jat.charge * COULOMB;
+
+			double fac1 = erfcl( ewcoef * r ) / r;
+
+			double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2*r2);
+
+			sum_energy  += qiqj * fac1;
+
+			Eigen::Vector3d f = qiqj * (fac1 + fac2) / r2 * del;
+
+			iat.force += f;
+			jat.force -= f;
+
+//			tensor[0] += f.x() * del.x();
+//			tensor[2] += f.y() * del.y();
+//			tensor[5] += f.z() * del.z();
+		}
+	}
+
+	return sum_energy;
+}
+
+double ComputeES::calc_ewald_intra()
+{
+	double sum_energy = 0;
+
+	sum_energy += calc_ewald_intra_bond();
+	sum_energy += calc_ewald_intra_angle();
+
+	return sum_energy;
+}
+
+double ComputeES::calc_ewald_intra_bond()
+{
+	double sum_energy = 0;
+
+	Lattice& lattice = *ptr_lattice;
+
+	for (auto& bond: ptr_psf->bondVector)
+	{
+		// skip dummy bond ... e.g., HT - HT
+		if (bond.Kb == 0) continue;
+
+		Atom* at1 = bond.ptr_atom1;
+		Atom* at2 = bond.ptr_atom2;
+
+		Eigen::Vector3d del
+			= lattice.delta(at1->position, at2->position);
+
+		double r2   = del.squaredNorm();
+		double  r   = sqrt(r2);
+
+		double fac1 = erfl(ewcoef * r) / r;
+		double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2 * r2);
+
+		double q1q2 = at1->charge * at2->charge * COULOMB;
+
+		Eigen::Vector3d f   = q1q2 * (fac1 - fac2) / r2 * del;
+		
+		sum_energy += fac1 * q1q2;
+
+		// intra force must be subtracted.
+		at1->force -= f;
+		at2->force += f;
+
+//		tensor[0] -= f.x() * del.x();
+//		tensor[2] -= f.y() * del.y();
+//		tensor[5] -= f.z() * del.z();
+	}
+
+	return sum_energy;
+}
+
+double ComputeES::calc_ewald_intra_angle()
+{
+	double sum_energy = 0;
+
+	Lattice& lattice = *ptr_lattice;
+
+	for (auto& angle: ptr_psf->angleVector)
+	{
+		Atom* at1 = angle.ptr_atom1;
+		Atom* at3 = angle.ptr_atom3;
+
+		Eigen::Vector3d del
+			= lattice.delta(at1->position, at3->position);
+
+		double r2   = del.squaredNorm();
+		double  r   = sqrt(r2);
+
+		double fac1 = erfl(ewcoef * r) / r;
+		double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2 * r2);
+
+		double q1q3 = at1->charge * at3->charge * COULOMB;
+
+		Eigen::Vector3d f   = q1q3 * (fac1 - fac2) / r2 * del;
+		
+		sum_energy += fac1 * q1q3;
+
+		// intra force must be subtracted.
+		at1->force -= f;
+		at3->force += f;
+
+//		tensor[0] -= f.x() * del.x();
+//		tensor[2] -= f.y() * del.y();
+//		tensor[5] -= f.z() * del.z();
+	}
+
+	return sum_energy;
 }
 
 double ComputeES::calc_ewald_recip_pme()
