@@ -1,0 +1,45 @@
+#forcefield
+parameters                par_all22_prot.inp
+
+#molecules
+structure                 water.psf
+coordinates               input.pdb
+#bincoordinates            test.coor
+#binvelocities             test.vel
+
+temperature               300
+outputname                out
+
+#temp & pressure coupling
+langevin                  on
+langevinDamping           10
+langevinTemp              300
+
+#output
+outputEnergies            1
+DCDFreq                   1
+
+#integrator
+integrator                VVER
+timestep                  2.0
+iseed                     1234
+
+#approximations
+rigidBonds                yes
+rigidTolerance            1e-10
+rigidIterations           100
+cutoff                    8
+ewald_kmax                8
+usePME                    yes
+pme_grid_x                16
+pme_grid_y                16
+pme_grid_z                16
+box_size_x                16.9461011959
+box_size_y                16.9461011959
+box_size_z                16.9461011959
+
+#boundary
+boundaryType              PBC
+
+#number of MD steps
+numstep                   10
