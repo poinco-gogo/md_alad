@@ -66,5 +66,7 @@ class Integrator
 	void velocity_velret_integrate_nve2();
 	void velocity_velret_integrate_bbk1();
 	void velocity_velret_integrate_bbk2();
+
+	void berendsen_thermostat();
 };
 #endif

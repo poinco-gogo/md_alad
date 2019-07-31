@@ -50,6 +50,10 @@ void Option::reset()
 	langevinTemp       = 300;
 	langevinDamping_ps = 0.5;
 	langevin           = false;
+
+	berendsenTemp      = 300;
+	berendsenPeriod_ps = 0.1;
+	berendsen          = false;
 }
 
 bool Option::load_config()
@@ -224,7 +228,7 @@ bool Option::load_config()
 		}
 		else if (s.find("berendsenPeriod", 0) != string::npos)
 		{
-			is >> stmp >> this->berendsenPeriod;
+			is >> stmp >> this->berendsenPeriod_ps;
 		}
 		else if (s.find("berendsen", 0) != string::npos)
 		{

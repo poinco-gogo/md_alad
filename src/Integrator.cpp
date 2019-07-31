@@ -25,6 +25,10 @@ Integrator::Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, vect
 	this->langevinDamping_ps = opt.langevinDamping_ps;
 	this->langevin           = opt.langevin;
 
+	this->berendsenTemp      = opt.berendsenTemp;
+	this->berendsenPeriod_ps = opt.berendsenPeriod_ps;
+	this->berendsen          = opt.berendsen;
+
 	this->ptr_atomVector     = ptr_atomVector;
 
 	this->ptr_ene            = ptr_ene;
@@ -52,6 +56,16 @@ void Integrator::show_simulation_info()
 		<< "REMARK Langevin                            : " << "yes\n"
 		<< "REMARK Langevin temperature (K)            : " << langevinTemp << '\n'
 		<< "REMARK Langevin damping coefficient (ps-1) : " << langevinDamping_ps << '\n'
+		<< "REMARK ------------------\n";
+	}
+
+	if (berendsen)
+	{
+		cout
+		<< "REMARK ------------------\n"
+		<< "REMARK Berendsen                           : " << "yes\n"
+		<< "REMARK Berendsen temperature (K)           : " << berendsenTemp << '\n'
+		<< "REMARK Berendsen coupling parameter (ps-1) : " << berendsenPeriod_ps << '\n'
 		<< "REMARK ------------------\n";
 	}
 }
@@ -201,8 +215,6 @@ void Integrator::run_velocity_velret(const int nstep)
 
 		velocity_velret_integrate_step2();
 
-		ene.calc_kinetic_energy();
-
 		if (istep % print_energy_step== 0)
 			out.print_energy(istep);
 
@@ -225,6 +237,10 @@ void Integrator::velocity_velret_integrate_step2()
 		velocity_velret_integrate_bbk2();
 	else
 		velocity_velret_integrate_nve2();
+
+	ptr_ene->calc_kinetic_energy();
+
+	if (berendsen) berendsen_thermostat();
 }
 
 void Integrator::velocity_velret_integrate_nve1()
@@ -288,4 +304,19 @@ void Integrator::velocity_velret_integrate_bbk2()
 
 	for (auto& at: *ptr_atomVector)
 		at.velocity = at.vnew;
+}
+
+void Integrator::berendsen_thermostat()
+{
+	Energy& ene = *ptr_ene;
+
+	ene.calc_temperature();
+
+	double val1 = dt_ps / berendsenPeriod_ps;
+
+	double val2 = berendsenTemp / ene.temperature - 1.0;
+
+	double factor = sqrt( 1.0 + val1 * val2 );
+
+	scale_velocity(factor);
 }
