@@ -218,6 +218,19 @@ bool Option::load_config()
 			is >> stmp >> stmp;
 			this->langevin = stobool(stmp);
 		}
+		else if (s.find("berendsenTemp", 0) != string::npos)
+		{
+			is >> stmp >> this->berendsenTemp;
+		}
+		else if (s.find("berendsenPeriod", 0) != string::npos)
+		{
+			is >> stmp >> this->berendsenPeriod;
+		}
+		else if (s.find("berendsen", 0) != string::npos)
+		{
+			is >> stmp >> stmp;
+			this->berendsen = stobool(stmp);
+		}
 		else
 		{
 			is >> stmp;
@@ -259,6 +272,12 @@ bool Option::consistency_check()
 	else if (integrator != "VVER")
 	{
 		err("unknown integrator was specified.");
+		return false;
+	}
+
+	if (langevin && berendsen)
+	{
+		err("choose one of the thermostats");
 		return false;
 	}
 

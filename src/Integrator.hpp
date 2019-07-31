@@ -36,6 +36,9 @@ class Integrator
 	double langevinTemp, langevinDamping_ps;
 	bool langevin;
 
+	double berendsenTemp, berendsenPeriod_ps;
+	bool berendsen;
+
 	public:
 
 	Integrator(const Option& opt, Energy* ptr_ene, Output* ptr_out, std::vector<Atom>* ptr_atomVector, Random* ptr_random);

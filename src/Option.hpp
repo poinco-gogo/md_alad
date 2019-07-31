@@ -43,6 +43,9 @@ class Option
 	double langevinTemp, langevinDamping_ps;
 	bool langevin;
 
+	double berendsenTemp, berendsenPeriod_ps;
+	bool berendsen;
+
 	private:
 
 	bool consistency_check();
