@@ -59,5 +59,9 @@ class Integrator
 	void run_velocity_velret(const int nstep);
 	void velocity_velret_integrate_step1();
 	void velocity_velret_integrate_step2();
+	void velocity_velret_integrate_nve1();
+	void velocity_velret_integrate_nve2();
+	void velocity_velret_integrate_bbk1();
+	void velocity_velret_integrate_bbk2();
 };
 #endif

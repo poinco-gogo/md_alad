@@ -213,6 +213,50 @@ void Integrator::run_velocity_velret(const int nstep)
 
 void Integrator::velocity_velret_integrate_step1()
 {
+	if (langevin)
+		velocity_velret_integrate_bbk1();
+	else
+		velocity_velret_integrate_nve1();
+}
+
+void Integrator::velocity_velret_integrate_step2()
+{
+	if (langevin)
+		velocity_velret_integrate_bbk2();
+	else
+		velocity_velret_integrate_nve2();
+}
+
+void Integrator::velocity_velret_integrate_nve1()
+{
+	for (auto& at: *ptr_atomVector)
+	{
+		at.vnew = at.velocity + at.invmass * dt * 0.5 * at.force;
+
+		at.rnew = at.position + dt * at.vnew;
+	}
+
+	if (rigidBonds && !ptr_ene->vbnd.do_rattle_loop1())
+		die("error: rattle does not converged!");
+
+	for (auto& at: *ptr_atomVector)
+		at.position = at.rnew;
+}
+
+void Integrator::velocity_velret_integrate_nve2()
+{
+	for (auto& at: *ptr_atomVector)
+		at.vnew += at.invmass * dt * 0.5 * at.force;
+
+	if (rigidBonds && !ptr_ene->vbnd.do_rattle_loop2())
+		die("error: rattle does not converged!");
+
+	for (auto& at: *ptr_atomVector)
+		at.velocity = at.vnew;
+}
+
+void Integrator::velocity_velret_integrate_bbk1()
+{
 	for (auto& at: *ptr_atomVector)
 	{
 		at.vnew = A * at.velocity
@@ -228,7 +272,7 @@ void Integrator::velocity_velret_integrate_step1()
 		at.position = at.rnew;
 }
 
-void Integrator::velocity_velret_integrate_step2()
+void Integrator::velocity_velret_integrate_bbk2()
 {
 	for (auto& at: *ptr_atomVector)
 	{
