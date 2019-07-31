@@ -2,7 +2,7 @@ TARGET=md_alad_ewald.x
 
 CXX=icpc
 
-CXXFLAGS= -O3 -std=c++11 -I./include -I./include/uiuc
+CXXFLAGS= -O3 -std=c++11 -I../include -I../include/uiuc
 
 LIBS= -mkl
 
