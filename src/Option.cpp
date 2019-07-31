@@ -21,7 +21,7 @@ void Option::reset()
 
 	initialTemp    = 0;
 
-	integrator     = "POSI";
+	integrator     = "VVER";
 
 	rigidBonds      = false;
 	rigidTolerance  = 1e-10;
@@ -248,6 +248,17 @@ bool Option::consistency_check()
 	if (outputname == "")
 	{
 		err("please specify outputname");
+		return false;
+	}
+
+	if (integrator == "POSI")
+	{
+		err("position Verlet is no longer supported.");
+		return false;
+	}
+	else if (integrator != "VVER")
+	{
+		err("unknown integrator was specified.");
 		return false;
 	}
 
