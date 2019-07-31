@@ -231,7 +231,7 @@ void Integrator::velocity_velret_integrate_nve1()
 {
 	for (auto& at: *ptr_atomVector)
 	{
-		at.vnew = at.velocity + at.invmass * dt * 0.5 * at.force;
+		at.vnew = at.velocity + at.invmass * dt_div2 * at.force;
 
 		at.rnew = at.position + dt * at.vnew;
 	}
@@ -246,7 +246,7 @@ void Integrator::velocity_velret_integrate_nve1()
 void Integrator::velocity_velret_integrate_nve2()
 {
 	for (auto& at: *ptr_atomVector)
-		at.vnew += at.invmass * dt * 0.5 * at.force;
+		at.vnew += at.invmass * dt_div2 * at.force;
 
 	if (rigidBonds && !ptr_ene->vbnd.do_rattle_loop2())
 		die("error: rattle does not converged!");
@@ -260,7 +260,7 @@ void Integrator::velocity_velret_integrate_bbk1()
 	for (auto& at: *ptr_atomVector)
 	{
 		at.vnew = A * at.velocity
-			+ at.invmass * dt * 0.5 * (at.force + at.random_f);
+			+ at.invmass * dt_div2 * (at.force + at.random_f);
 
 		at.rnew = at.position + dt * at.vnew;
 	}
@@ -278,7 +278,7 @@ void Integrator::velocity_velret_integrate_bbk2()
 	{
 		at.random_f = at.R * ptr_random->gaussian_vector();
 
-		at.vnew += at.invmass * dt * 0.5 * (at.force + at.random_f);
+		at.vnew += at.invmass * dt_div2 * (at.force + at.random_f);
 
 		at.vnew *= inB;
 	}
