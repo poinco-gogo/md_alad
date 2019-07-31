@@ -58,6 +58,7 @@ class Atom
 
 	std::vector<int> exclusionVector;
 	std::vector<int> scaled1_4Vector;
+	std::vector<int> ex_pair_list;
 
 //	default constructor
 	Atom();

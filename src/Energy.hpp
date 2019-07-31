@@ -42,5 +42,7 @@ class Energy
 	double cutoff;
 
 	void show_simulation_info();
+
+	void make_exclusion_pairs();
 };
 #endif

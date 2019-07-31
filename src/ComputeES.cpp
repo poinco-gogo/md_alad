@@ -89,13 +89,10 @@ double ComputeES::compute_nobc_force()
 	{
 		Atom& iat = ptr_atomVector->at(i);
 
-		for (int j = i + 1; j < ptr_atomVector->size(); j++)
+		for (auto& j: iat.ex_pair_list)
 		{
 			Atom& jat = ptr_atomVector->at(j);
 			
-			if (jat.checkExclusionPair(iat))
-				continue;
-
 			Eigen::Vector3d r12 = iat.position - jat.position;
 
 			double r  = r12.norm();
@@ -188,12 +185,9 @@ double ComputeES::calc_ewald_real()
 		double qi    = iat.charge;
 		Eigen::Vector3d ipos = iat.position;
 
-		for (int j = i + 1; j < ptr_atomVector->size(); j++)
+		for (auto& j: iat.ex_pair_list)
 		{
 			Atom& jat = ptr_atomVector->at(j);
-
-			// skip if they are 1-2, 1-3 pair.
-			if (iat.checkExclusionPair(jat)) continue;
 
 			// nearest image convention.
 			Eigen::Vector3d del = lattice.delta(ipos, jat.position);

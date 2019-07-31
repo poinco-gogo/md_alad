@@ -24,12 +24,9 @@ double ComputeLJ::compute_force()
 	{
 		Atom& iat = ptr_atomVector->at(i);
 
-		for (int j = i + 1; j < ptr_atomVector->size(); j++)
+		for (auto& j: iat.ex_pair_list)
 		{
 			Atom& jat = ptr_atomVector->at(j);
-
-			if (jat.checkExclusionPair(iat))
-				continue;
 
 			bool scaled1_4 = false;
 			if (jat.checkScaled1_4Pair(iat))

@@ -28,6 +28,8 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 	this->ves                = tmp_es;
 
 	show_simulation_info();
+
+	make_exclusion_pairs();
 }
 
 void Energy::show_simulation_info()
@@ -64,4 +66,21 @@ void Energy::zero_force()
 {
 	for (auto& atom: *ptr_atomVector)
 		atom.force = V3ZERO;
+}
+
+void Energy::make_exclusion_pairs()
+{
+	for (int i = 0; i < ptr_atomVector->size(); i++)
+	{
+		Atom& iat = ptr_atomVector->at(i);
+
+		for (int j = i + 1; j < ptr_atomVector->size(); j++)
+		{
+			Atom& jat = ptr_atomVector->at(j);
+
+			if (jat.checkExclusionPair(iat)) continue;
+
+			iat.ex_pair_list.push_back(j);
+		}
+	}
 }
