@@ -126,8 +126,8 @@ double ComputeBond::do_rattle_step1()
 		p2->vnew = p2->vnew + p2->invmass * vlambda * 2. * (-r12now);
 
 		// store and accumulate constraint force
-		p1->constfrc += 2.0 * sqinvdt * dlambda * 2. *   r12now;
-		p2->constfrc += 2.0 * sqinvdt * dlambda * 2. * (-r12now);
+		//p1->constfrc += 2.0 * sqinvdt * dlambda * 2. *   r12now;
+		//p2->constfrc += 2.0 * sqinvdt * dlambda * 2. * (-r12now);
 	}
 
 	// error check

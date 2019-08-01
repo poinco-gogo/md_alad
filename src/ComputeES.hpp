@@ -1,7 +1,7 @@
 #ifndef ___CLASS_COMPUTE_ES
 #define ___CLASS_COMPUTE_ES
 
-#define FC_SYMBOL 1
+#define FC_SYMBOL 2
 #include "helpme_standalone.h"
 #include <Eigen/Core>
 #include "Atom.hpp"
