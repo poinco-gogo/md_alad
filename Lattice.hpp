@@ -96,7 +96,7 @@ class Lattice
 	private:
 	void recalculate()
 	{
-		double rvol2pi = 2. * PI / volume();
+		double rvol2pi = 2. * N_PI / volume();
 		g1 = a2.cross(a3) * rvol2pi;
 		g2 = a3.cross(a1) * rvol2pi;
 		g3 = a1.cross(a2) * rvol2pi;

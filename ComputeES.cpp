@@ -170,7 +170,7 @@ double ComputeES::calc_ewald_self()
 
 		result += qi * qi;
 	}
-	result *= -ewcoef / SQRTPI * COULOMB;
+	result *= -ewcoef / N_SQRTPI * COULOMB;
 
 	return result;
 }
@@ -207,7 +207,7 @@ double ComputeES::calc_ewald_real()
 
 			double fac1 = erfcl( ewcoef * r ) / r;
 
-			double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2*r2);
+			double fac2 = 2. * ewcoef / N_SQRTPI * exp(-ewcoef2*r2);
 
 			sum_energy  += qiqj * fac1;
 
@@ -256,7 +256,7 @@ double ComputeES::calc_ewald_intra_bond()
 		double  r   = sqrt(r2);
 
 		double fac1 = erfl(ewcoef * r) / r;
-		double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2 * r2);
+		double fac2 = 2. * ewcoef / N_SQRTPI * exp(-ewcoef2 * r2);
 
 		double q1q2 = at1->charge * at2->charge * COULOMB;
 
@@ -294,7 +294,7 @@ double ComputeES::calc_ewald_intra_angle()
 		double  r   = sqrt(r2);
 
 		double fac1 = erfl(ewcoef * r) / r;
-		double fac2 = 2. * ewcoef / SQRTPI * exp(-ewcoef2 * r2);
+		double fac2 = 2. * ewcoef / N_SQRTPI * exp(-ewcoef2 * r2);
 
 		double q1q3 = at1->charge * at3->charge * COULOMB;
 
@@ -381,7 +381,7 @@ double ComputeES::calc_ewald_recip_direct()
 
 	static complex<double> II(0., 1.);
 
-	static const double piv = 4. * PI / ptr_lattice->volume() * COULOMB;
+	static const double piv = 4. * N_PI / ptr_lattice->volume() * COULOMB;
 
 	// loop over reciprocal lattice vectors
 	for (Eigen::Vector3d& g1: g)
