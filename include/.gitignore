@@ -33,4 +33,5 @@
 *.x
 
 # Files
-dcdplugin.cpp
+Eigen
+uiuc/
