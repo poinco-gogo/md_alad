@@ -252,6 +252,8 @@ bool Option::load_config()
 		random_device rnd;
 		this->iseed = rnd();
 	}
+
+	return true;
 }
 
 bool Option::consistency_check()
