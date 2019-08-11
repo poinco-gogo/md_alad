@@ -55,6 +55,8 @@ int main (int argc, char** argv)
 	LoadParm ALL22(opt.parameters);
 	if (!PSFFile.set_bond_parm(ALL22.bondParmVector)) return 0;
 	if (!PSFFile.set_angle_parm(ALL22.angleParmVector)) return 0;
+	if (!PSFFile.set_dihedral_parm(ALL22.dihedralParmVector)) return 0;
+	if (!PSFFile.set_improper_parm(ALL22.improperParmVector)) return 0;
 	if (!PSFFile.set_lj_parm(ALL22.LJParmVector)) return 0;
 
 	PSFFile.make_exclusion_vector();
