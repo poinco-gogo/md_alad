@@ -281,6 +281,8 @@ bool LoadParm::merge(string filename)
 	open_fi(fi);
 
 	duplication_check();
+
+	return true;
 }
 
 void LoadParm::duplication_check()
