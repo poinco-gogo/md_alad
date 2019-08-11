@@ -62,6 +62,22 @@ void PSF::read_PSF()
 			is >> ncnt;
 			get_angle_list(ncnt, fi);
 		}
+
+		loc = s.find("NPHI", 0);
+		if (loc != string::npos)
+		{
+			istringstream is(s.substr(0, 8));
+			is >> ncnt;
+			get_dihedral_list(ncnt, fi);
+		}
+
+		loc = s.find("NIMPHI", 0);
+		if (loc != string::npos)
+		{
+			istringstream is(s.substr(0, 8));
+			is >> ncnt;
+			get_improper_list(ncnt, fi);
+		}
 	}
 
 	fi.close();
