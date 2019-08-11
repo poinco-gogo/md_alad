@@ -44,7 +44,7 @@ class PSF
 	bool set_angle_parm(std::vector<Angle>& angleParmVector);
 	bool set_dihedral_parm(std::vector<Dihedral>& dihedralParmVector);
 	bool set_improper_parm(std::vector<Improper>& improperParmVector);
-	bool set_cmap_parm(std::vector<Cmap>& cmapParmVector);
+	void set_cmap_parm(std::vector<Cmap>& cmapParmVector);
 	bool set_lj_parm(std::vector<Atom>& LJParmVector);
 
 	void make_exclusion_vector();

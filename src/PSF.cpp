@@ -651,12 +651,12 @@ void PSF::set_cmap_parm(vector<Cmap>& cmapParmVector)
 
 		Cmap cmap(dphi, dpsi);
 
-		for (int j = 0; j < ptr_cmapParmVector->size(); j++)
+		for (int j = 0; j < cmapParmVector.size(); j++)
 		{
 			bool match = true;
 			for (int k = 0; k < 8; k++)
 			{
-				if (ptr_cmapParmVector->at(j).attype[k]
+				if (cmapParmVector[j].attype[k]
 					!= attype[k])
 				{
 					match = false;
@@ -665,9 +665,9 @@ void PSF::set_cmap_parm(vector<Cmap>& cmapParmVector)
 			}
 			if (match)
 			{
-				cmap.attype = ptr_cmapParmVector->at(j).attype;
+				cmap.attype = cmapParmVector[j].attype;
 
-				cmap.index_into_cmap_type = j;
+				cmap.cmap_type_index = j;
 
 				break;
 			}
