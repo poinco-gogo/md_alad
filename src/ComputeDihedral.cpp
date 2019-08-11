@@ -4,9 +4,9 @@
 #include "ComputeDihedral.hpp"
 using namespace std;
 
-ComputeDihedral::ComputeDihedral(vector<Dihedral>* ptr_dihedralVector)
+ComputeDihedral::ComputeDihedral(vector<Dihedral>& dihedralVector)
 {
-	this -> ptr_dihedralVector = ptr_dihedralVector;
+	this -> ptr_dihedralVector = &dihedralVector;
 
 	reset();
 }

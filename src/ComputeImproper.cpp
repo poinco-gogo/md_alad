@@ -3,9 +3,9 @@
 #include "ComputeImproper.hpp"
 using namespace std;
 
-ComputeImproper::ComputeImproper(vector<Improper>* ptr_improperVector)
+ComputeImproper::ComputeImproper(vector<Improper>& improperVector)
 {
-	this -> ptr_improperVector = ptr_improperVector;
+	this -> ptr_improperVector = &improperVector;
 
 	reset();
 }

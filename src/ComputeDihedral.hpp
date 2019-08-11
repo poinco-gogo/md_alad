@@ -14,8 +14,8 @@ class ComputeDihedral
 	
 	public:
 
-	ComputeDihedral();
-	ComputeDihedral(std::vector<Dihedral>* ptr_dihedralVector);
+	ComputeDihedral(){};
+	ComputeDihedral(std::vector<Dihedral>& dihedralVector);
 
 	void reset();
 

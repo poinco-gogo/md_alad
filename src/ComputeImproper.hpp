@@ -14,8 +14,8 @@ class ComputeImproper
 	
 	public:
 
-	ComputeImproper();
-	ComputeImproper(std::vector<Improper>* ptr_improperVector);
+	ComputeImproper(){};
+	ComputeImproper(std::vector<Improper>& improperVector);
 
 	void reset();
 
