@@ -19,11 +19,15 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 
 	ComputeBond              tmp_bnd(opt, psf.bondVector);
 	ComputeAngle             tmp_ang(psf.angleVector);
+	ComputeDihedral          tmp_dih(&psf.dihedralVector);
+	ComputeImproper          tmp_imp(&psf.improperVector);
 	ComputeLJ                tmp_lj(opt, sys, atomVector);
 	ComputeES                tmp_es(opt, sys, atomVector, psf);
 
 	this->vbnd               = tmp_bnd;
 	this->vang               = tmp_ang;
+	this->vdih               = tmp_dih;
+	this->vimp               = tmp_imp;
 	this->vlj                = tmp_lj;
 	this->ves                = tmp_es;
 
@@ -58,6 +62,8 @@ void Energy::calc_force()
 {
 	ebond                    = vbnd.compute_force();
 	eangle                   = vang.compute_force();
+	edihed                   = vdih.compute_force();
+	eimprop                  = vimp.compute_force();
 	elj                      = vlj.compute_force();
 	ees                      = ves.compute_force();
 }

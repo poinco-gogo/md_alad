@@ -10,6 +10,8 @@
 #include "System.hpp"
 #include "ComputeBond.hpp"
 #include "ComputeAngle.hpp"
+#include "ComputeDihedral.hpp"
+#include "ComputeImproper.hpp"
 #include "ComputeLJ.hpp"
 #include "ComputeES.hpp"
 
@@ -22,10 +24,12 @@ class Energy
 	Energy(const Option& opt, System& sys, std::vector<Atom>& atomVector, PSF& psf);
 
 	double temperature;
-	double ebond, eangle, ees, elj, kinetic;
+	double ebond, eangle, edihed, eimprop, ees, elj, kinetic;
 
 	ComputeBond              vbnd;
 	ComputeAngle             vang;
+	ComputeDihedral          vdih;
+	ComputeImproper          vimp;
 	ComputeLJ                vlj;
 	ComputeES                ves;
 
