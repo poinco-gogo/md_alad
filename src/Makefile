@@ -10,7 +10,7 @@ SRCS = Random.cpp dcdplugin.cpp Atom.cpp NAMDBin.cpp PDBUtil.cpp PDB.cpp PSF.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
-HEADS= common.hpp Random.hpp Lattice.hpp Atom.hpp NAMDBin.hpp Bond.hpp Angle.hpp PDBUtil.hpp PDB.hpp PSF.hpp LoadParm.hpp Option.hpp System.hpp ComputeBond.hpp ComputeAngle.hpp ComputeLJ.hpp ComputeES.hpp Energy.hpp Integrator.hpp Output.hpp
+HEADS=
 
 $(TARGET): $(OBJS) $(HEADS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
