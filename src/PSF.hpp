@@ -8,6 +8,8 @@
 #include "Atom.hpp"
 #include "Bond.hpp"
 #include "Angle.hpp"
+#include "Dihedral.hpp"
+#include "Improper.hpp"
 
 class PSF 
 {
@@ -20,9 +22,13 @@ class PSF
 	std::vector<Atom>      atomVector;
 	std::vector<Bond>      bondVector;
 	std::vector<Angle>     angleVector;
+	std::vector<Dihedral>  dihedralVector;
+	std::vector<Improper>  improperVector;
 
 	std::vector<int> bondArray;
 	std::vector<int> angleArray;
+	std::vector<int> dihedralArray;
+	std::vector<int> improperArray;
 	
 	// constructor
 	PSF(std::string filename);
@@ -33,6 +39,8 @@ class PSF
 
 	bool set_bond_parm(std::vector<Bond>& bondParmVector);
 	bool set_angle_parm(std::vector<Angle>& angleParmVector);
+	bool set_dihedral_parm(std::vector<Dihedral>& dihedralParmVector);
+	bool set_improper_parm(std::vector<Improper>& improperParmVector);
 	bool set_lj_parm(std::vector<Atom>& LJParmVector);
 
 	void make_exclusion_vector();
@@ -54,5 +62,7 @@ class PSF
 	void get_atom_list(const int natom, std::ifstream& fi);
 	void get_bond_list(const int nbond, std::ifstream& fi);
 	void get_angle_list(const int nangle, std::ifstream& fi);
+	void get_dihedral_list(const int ndihedral, std::ifstream& fi);
+	void get_improper_list(const int nimproper, std::ifstream& fi);
 };
 #endif

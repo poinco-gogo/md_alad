@@ -289,6 +289,304 @@ bool PSF::set_angle_parm(vector<Angle>& angleParmVector)
 
 } // end of func() set_angle_parm
 
+void PSF::get_dihedral_list(const int ndihedral, ifstream& fi)
+{
+	cout
+	<< "REMARK NUMBER OF UNIQUE DIHEDRAL FROM PSF : " << ndihedral << '\n';
+
+	string s;
+	int b;
+	while ( getline(fi, s) && s != "" )
+	{
+		istringstream is(s);
+		while (is >> b)
+			dihedralArray.push_back(b);
+	}
+
+	/*  Debug      list all dihedral  */
+/*
+	for (int i = 0; i < ndihedral; i++)
+	{
+		cout << "REMARK  "
+		     << "dihedral no. " << i+1 << " / " << ndihedral << " "
+		     << dihedralArray[i*4    ] << " - "
+		     << dihedralArray[i*4 + 1] << " - "
+		     << dihedralArray[i*4 + 2] << " - "
+		     << dihedralArray[i*4 + 3] << " "
+		     << ptr_atomVector -> at(dihedralArray[i*4] - 1).PSFAtomName
+		     << " - "
+		     << ptr_atomVector -> at(dihedralArray[i*4 + 1] - 1).PSFAtomName
+		     << " - "
+		     << ptr_atomVector -> at(dihedralArray[i*4 + 2] - 1).PSFAtomName
+		     << " - "
+		     << ptr_atomVector -> at(dihedralArray[i*4 + 3] - 1).PSFAtomName << '\n';
+	}*/
+
+}
+
+bool PSF::set_dihedral_parm(vector<Dihedral>& dihedralParmVector)
+{
+	string iat1, iat2, iat3, iat4;
+	string jat1, jat2, jat3, jat4;
+
+	// now make dihedralVector
+	for (int i = 0; i < dihedralArray.size() / 4; i++)
+	{
+		bool assigned = false;
+
+		int i4 = i * 4;
+
+		int id1 = dihedralArray[i4    ] - 1;
+		int id2 = dihedralArray[i4 + 1] - 1;
+		int id3 = dihedralArray[i4 + 2] - 1;
+		int id4 = dihedralArray[i4 + 3] - 1;
+
+		iat1 = ptr_atomVector -> at( id1 ).PSFAtomName;
+		iat2 = ptr_atomVector -> at( id2 ).PSFAtomName;
+		iat3 = ptr_atomVector -> at( id3 ).PSFAtomName;
+		iat4 = ptr_atomVector -> at( id4 ).PSFAtomName;
+
+		for (Dihedral& dparm: dihedralParmVector)
+		{
+			// skip wildcard parameters
+			if (dparm.is_wildcard) continue;
+
+			jat1 = dparm.at1; jat2 = dparm.at2;
+			jat3 = dparm.at3; jat4 = dparm.at4;
+
+			if ((iat1 == jat1 && iat2 == jat2 && iat3 == jat3 && iat4 == jat4) || (iat1 == jat4 && iat2 == jat3 && iat3 == jat2 && iat4 == jat1))
+			{
+				assigned = true;
+
+				Dihedral dihed(
+				&ptr_atomVector -> at( id1 ),
+				&ptr_atomVector -> at( id2 ),
+				&ptr_atomVector -> at( id3 ),
+				&ptr_atomVector -> at( id4 ),
+				dparm.Kchi,
+				dparm.n,
+				dparm.delta);
+
+				dihedralVector.push_back(dihed);
+
+				// ここでbreakすると
+			        // O    C    N    CP1 みたいにパラメータを
+				// 複数持つ二面角にパラメータがアサインされない.
+				//break;
+			}
+		}
+
+		// forward to next dihedral if assigned
+		if (assigned) continue;
+
+		// paramaeres for this dihedral is missing.
+		// search for wildcard parameters
+		for (Dihedral& dparm: DihedralParmVector)
+		{
+			// skip non-wildcard parameters
+			if (!dparm.is_wildcard) continue;
+
+			jat1 = dparm.at1; jat2 = dparm.at2;
+			jat3 = dparm.at3; jat4 = dparm.at4;
+
+			// assumed X-A-B-X, not A-X-X-B... is this OK?
+			if ( (iat2 == jat2 && iat3 == jat3) ||
+					(iat2 == jat3 && iat3 == jat2))
+			{
+				assigned = true;
+
+				Dihedral dihed(
+				&ptr_atomVector -> at( id1 ),
+				&ptr_atomVector -> at( id2 ),
+				&ptr_atomVector -> at( id3 ),
+				&ptr_atomVector -> at( id4 ),
+				dparm.Kchi,
+				dparm.n,
+				dparm.delta);
+
+				dihedralVector.push_back(dihed);
+			}
+		}
+
+		if (!assigned)
+		{
+			cerr << "error: Dihedral parameter missing for: "
+					<< iat1 << " - " << iat2 << " - "
+					<< iat3 << " - " << iat4 << '\n';
+			return false;
+		}
+	} // for dihedralArray
+/*
+	// DEBUG: list all dihedral
+	for (int i = 0; i < DihedralVector.size(); i++)
+	{
+		cout << "DEBUG " << i + 1 << " / " << DihedralVector.size()
+		<< " "
+		<< DihedralVector[i].ptr_atom1 -> PSFAtomName << " - "
+		<< DihedralVector[i].ptr_atom2 -> PSFAtomName << " - "
+		<< DihedralVector[i].ptr_atom3 -> PSFAtomName << " - "
+		<< DihedralVector[i].ptr_atom4 -> PSFAtomName << "   "
+		<< DihedralVector[i].Kchi << "  "
+		<< DihedralVector[i].n    << "  "
+		<< DihedralVector[i].delta << endl;
+	}
+
+	cout << "DEBUG dihedral " << dihedralArray.size() / 4 << " should be "
+	<< DihedralVector.size() << '\n';
+*/
+	cout << "REMARK Dihedral parameters successfully assigned.\n";
+	cout << "REMARK NUMBER OF DUPLICATED DIHEDRAL = "
+		<< dihedralVector.size() << '\n';
+
+	dihedralArray.clear();
+	dihedralParmVector.clear();
+
+	return true;
+
+} // end of func() set_dihedral_parm
+
+
+void PSF::get_improper_list(int nimproper, ifstream& fi)
+{
+	cout << "REMARK NUMBER OF IMPROPER FROM PSF : " << nimproper << '\n';
+
+	string s;
+	int b;
+	while ( getline(fi, s) && s != "" )
+	{
+		istringstream is(s);
+		while (is >> b)
+			improperArray.push_back(b);
+	}
+/*
+	for (int i = 0; i < nimproper; i++)
+	{
+		cout << "REMARK  "
+		     << "improper no. " << i+1 << " / " << nimproper << " "
+		     << improperArray[i*4    ] << " - "
+		     << improperArray[i*4 + 1] << " - "
+		     << improperArray[i*4 + 2] << " - "
+		     << improperArray[i*4 + 3] << " "
+		     << ptr_atomVector -> at(improperArray[i*4] - 1).PDBAtomName
+		     << " - "
+		     << ptr_atomVector -> at(improperArray[i*4 + 1] - 1).PDBAtomName
+		     << " - "
+		     << ptr_atomVector -> at(improperArray[i*4 + 2] - 1).PDBAtomName
+		     << " - "
+		     << ptr_atomVector -> at(improperArray[i*4 + 3] - 1).PDBAtomName << '\n';
+	}
+*/
+} // end of func() get_improper_list
+
+bool PSF::set_improper_parm(vector<Improper>& improperParmVector)
+{
+	for (int i = 0; i < improperArray.size() / 4; i++)
+	{
+		bool assigned = false;
+
+		int id1 = improperArray[i * 4    ];
+		int id2 = improperArray[i * 4 + 1];
+		int id3 = improperArray[i * 4 + 2];
+		int id4 = improperArray[i * 4 + 3];
+
+		string iat1 = ptr_atomVector -> at(id1 - 1).PSFAtomName;
+		string iat2 = ptr_atomVector -> at(id2 - 1).PSFAtomName;
+		string iat3 = ptr_atomVector -> at(id3 - 1).PSFAtomName;
+		string iat4 = ptr_atomVector -> at(id4 - 1).PSFAtomName;
+
+		for (Improper& iparm: improperParmVector)
+		{
+			// skip wildcard parameters
+			if (iparm.is_wildcard) continue;
+
+			string jat1 = iparm.at1;
+			string jat2 = iparm.at2;
+			string jat3 = iparm.at3;
+			string jat4 = iparm.at4;
+
+			if ((iat1 == jat1 && iat2 == jat2 && iat3 == jat3 && iat4 == jat4) || (iat1 == jat4 && iat2 == jat3 && iat3 == jat2 && iat4 == jat1))
+			{
+				assigned = true;
+
+				Improper impro(
+				&ptr_atomVector -> at(id1-1),
+				&ptr_atomVector -> at(id2-1),
+				&ptr_atomVector -> at(id3-1),
+				&ptr_atomVector -> at(id4-1),
+				iparm.Kpsi,
+				iparm.psi0);
+
+				improperVector.push_back(impro);
+
+				break;
+			}
+		}
+
+		if (assigned) continue;
+
+		// then try wildcard parameters
+		for (Improper& iparm: improperParmVector)
+		{
+			// skip non-wildcard parameters
+			if (!iparm.is_wildcard) continue;
+
+			string jat1 = iparm.at1;
+			string jat2 = iparm.at2;
+			string jat3 = iparm.at3;
+			string jat4 = iparm.at4;
+
+			if ((iat1 == jat1 && iat4 == jat4) || (iat1 == jat4 && iat4 == jat1))
+			{
+				assigned = true;
+
+				Improper impro(
+				&ptr_atomVector -> at(id1-1),
+				&ptr_atomVector -> at(id2-1),
+				&ptr_atomVector -> at(id3-1),
+				&ptr_atomVector -> at(id4-1),
+				iparm.Kpsi,
+				iparm.psi0);
+
+				improperVector.push_back(impro);
+
+				break;
+			}
+		}
+
+		if (!assigned)
+		{
+			cerr << "error: improper parameter missing for: "
+				<< iat1 << " - " << iat2 << " - "
+				<< iat3 << " - " << iat4 << '\n';
+			return false;
+		}
+	}
+
+	improperArray.clear();
+	ImproperParmVector.clear();
+	cout << "REMARK Improper parameters successfully assigned.\n";
+	return true;
+/*
+	cout << "DEBUG IMPROPER ARRAY.size() / 4 = " << improperArray.size() / 4
+	<< " should be \"assigned\" " << assigned << '\n';
+	for (int i = 0; i < ImproperVector.size(); i++)
+	{
+		Improper* impro = &ImproperVector[i];
+		cout << i + 1 << "   "
+		<< impro->ptr_atom1->PSFIndex << " "
+		<< impro->ptr_atom1->PSFAtomName << " "
+		<< impro->ptr_atom2->PSFIndex << " "
+		<< impro->ptr_atom2->PSFAtomName << " "
+		<< impro->ptr_atom3->PSFIndex << " "
+		<< impro->ptr_atom3->PSFAtomName << " "
+		<< impro->ptr_atom4->PSFIndex << " "
+		<< impro->ptr_atom4->PSFAtomName << " "
+		<< impro->Kpsi << " "
+		<< impro->psi0 << endl;
+	}
+*/
+}// end of func() set_improper_parm
+
 bool PSF::set_lj_parm(vector<Atom>& LJParmVector)
 {
 	if (!LJParmVector.size())
