@@ -33,7 +33,7 @@ class LoadParm
 	void get_bond_parameters(std::ifstream& fi);
 	void get_angle_parameters(std::ifstream& fi);
 	void get_dihedral_parameters(std::ifstream& fi);
-	void get_improper_parameters(std::ifstream& fi);
+	bool get_improper_parameters(std::ifstream& fi);
 	void get_cmap_parameters(std::ifstream& fi);
 	void get_LJ_parameters(std::ifstream& fi);
 };

@@ -21,6 +21,7 @@ LoadParm::LoadParm(string filename)
 
 void LoadParm::open_fi(ifstream& fi)
 {
+	bool skipCmap;
 	string s;
 
 	cout << "REMARK ---------------------\n"
@@ -33,8 +34,8 @@ void LoadParm::open_fi(ifstream& fi)
 			get_bond_parameters(fi);
 			get_angle_parameters(fi);
 			get_dihedral_parameters(fi);
-			get_improper_parameters(fi);
-			get_cmap_parameters(fi);
+			skipCmap = get_improper_parameters(fi);
+			if (!skipCmap) get_cmap_parameters(fi);
 			get_LJ_parameters(fi);
 		}
 	}
