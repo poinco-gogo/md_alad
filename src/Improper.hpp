@@ -16,6 +16,7 @@ class Improper
 	private:
 	double chi;
 	double inA, inB, inC;
+	double cos_psi, sin_psi;
 	Eigen::Vector3d hA, hB, hC;
 
 	public:
@@ -28,6 +29,7 @@ class Improper
 	Atom* ptr_atom4;
 
 	double energy;
+	double k;
 	double Kpsi;
 	double psi0;
 	double psi;
