@@ -19,8 +19,8 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 
 	ComputeBond              tmp_bnd(opt, psf.bondVector);
 	ComputeAngle             tmp_ang(psf.angleVector);
-	ComputeDihedral          tmp_dih(&psf.dihedralVector);
-	ComputeImproper          tmp_imp(&psf.improperVector);
+	ComputeDihedral          tmp_dih(psf.dihedralVector);
+	ComputeImproper          tmp_imp(psf.improperVector);
 	ComputeLJ                tmp_lj(opt, sys, atomVector);
 	ComputeES                tmp_es(opt, sys, atomVector, psf);
 
