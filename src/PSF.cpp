@@ -381,7 +381,7 @@ bool PSF::set_dihedral_parm(vector<Dihedral>& dihedralParmVector)
 
 		// paramaeres for this dihedral is missing.
 		// search for wildcard parameters
-		for (Dihedral& dparm: DihedralParmVector)
+		for (Dihedral& dparm: dihedralParmVector)
 		{
 			// skip non-wildcard parameters
 			if (!dparm.is_wildcard) continue;
@@ -563,7 +563,7 @@ bool PSF::set_improper_parm(vector<Improper>& improperParmVector)
 	}
 
 	improperArray.clear();
-	ImproperParmVector.clear();
+	improperParmVector.clear();
 	cout << "REMARK Improper parameters successfully assigned.\n";
 	return true;
 /*
