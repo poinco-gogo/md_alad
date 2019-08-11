@@ -39,7 +39,7 @@ void ComputeDihedral::show_dihedral(const Dihedral& dihed)
 {
 	cout
 	<< setw(10) << fixed << setprecision(3)
-	<< dihed -> chi * RAD2DEG
+	<< dihed.chi * RAD2DEG
 	<< setw(5)
 	<< dihed.ptr_atom1 -> PDBAtomName
 	<< setw(5)
