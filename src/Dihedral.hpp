@@ -36,6 +36,7 @@ class Dihedral
 	Eigen::Vector3d force1, force2, force3, force4;
 
 	//constructor
+	Dihedral(){}; // do not remove this...cmap uses it
 	Dihedral(std::string at1, std::string at2, std::string at3, std::string at4, double Kchi, double n, double delta)
 	{
 		this -> at1 = at1;
