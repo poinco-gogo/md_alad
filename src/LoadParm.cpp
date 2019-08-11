@@ -223,7 +223,42 @@ void LoadParm::get_cmap_parameters(ifstream& fi)
 	{
 		if (s.substr(0, 1) == "!" || s.empty()) continue;
 		if (s.find("NONBONDED", 0) != string::npos) break;
+
+		vector<string> vs(8);
+		int resolution = 0;;
+		istringstream is1(s);
+		is1
+			>> vs[0] >> vs[1] >> vs[2] >> vs[3] >> vs[4]
+			>> vs[5] >> vs[6] >> vs[7] >> resolution;
+
+		if (resolution != 24)
+		{
+			cerr << "\n\n  ERROR ERROR ERROR ERROR \n\n\n"
+				"\n\n  Unexpected Cmap Resolution of "
+				<< resolution << "    \n\n\n\n";
+			die("program terminated.");
+		}
+
+		Cmap cmap(vs[0], vs[1], vs[2], vs[3],
+			  vs[4], vs[5], vs[6], vs[7]);
+		int icnt = 0;
+
+		for (int i = 0; i < resolution; i++)
+		{
+			getline(fi, s); // brank line
+			getline(fi, s); // line like "! phi = -180.0"
+			//cout << s << endl;
+			for (int j = 0; j < resolution; j++)
+			{
+				fi >> cmap.cmap_grid_data( j, i );
+			}
+			getline(fi, s); // need this.
+		}
+
+		cmapParmVector.push_back(cmap);
 	}
+
+	cout << "REMARK " << cmapParmVector.size() << " cmaps\n";
 }
 
 void LoadParm::get_LJ_parameters(ifstream& fi)

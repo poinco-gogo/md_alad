@@ -7,6 +7,7 @@
 #include "Angle.hpp"
 #include "Dihedral.hpp"
 #include "Improper.hpp"
+#include "Cmap.hpp"
 
 class LoadParm
 {
@@ -15,11 +16,12 @@ class LoadParm
 	
 	public:
 	
-	std::vector<Bond> bondParmVector;
-	std::vector<Angle> angleParmVector;
-	std::vector<Dihedral> dihedralParmVector;
-	std::vector<Improper> improperParmVector;
-	std::vector<Atom> LJParmVector;
+	std::vector<Bond>        bondParmVector;
+	std::vector<Angle>       angleParmVector;
+	std::vector<Dihedral>    dihedralParmVector;
+	std::vector<Improper>    improperParmVector;
+	std::vector<Cmap>        cmapParmVector;
+	std::vector<Atom>        LJParmVector;
 
 	// constructor
 	LoadParm(std::string filename);
