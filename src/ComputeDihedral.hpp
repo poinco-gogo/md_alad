@@ -14,13 +14,14 @@ class ComputeDihedral
 	
 	public:
 
+	ComputeDihedral();
 	ComputeDihedral(std::vector<Dihedral>* ptr_dihedralVector);
 
 	void reset();
 
 	double compute_force();
 
-	void show_dihedral(Dihedral& dihed);
+	void show_dihedral(const Dihedral& dihed);
 	void show_all_dihedrals();
 };
 #endif
