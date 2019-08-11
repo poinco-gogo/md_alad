@@ -78,6 +78,14 @@ void PSF::read_PSF()
 			is >> ncnt;
 			get_improper_list(ncnt, fi);
 		}
+
+		loc = s.find("NCRTERM", 0);
+		if (loc != string::npos)
+		{
+			istringstream is(s.substr(0, 8));
+			is >> ncnt;
+			get_cmap_list(ncnt, fi);
+		}
 	}
 
 	fi.close();
@@ -602,6 +610,74 @@ bool PSF::set_improper_parm(vector<Improper>& improperParmVector)
 	}
 */
 }// end of func() set_improper_parm
+
+void PSF::get_cmap_list(int ncmap, ifstream& fi)
+{
+	cout << "REMARK NUMBER OF CROSS-TERM : "  << ncmap << '\n';
+	string s;
+	while(getline(fi, s) && !s.empty())
+	{
+		istringstream is(s);
+		int itmp;
+		while (is >> itmp) cmapArray.push_back(itmp);
+	}
+/*	cout << "cmapArray.size() / 4 = " << cmapArray.size() / 4 << endl;
+	cout << "DEBUG>>>>>>>>>>>>>>>>>>>>>>>\n";
+	for (int i = 0; i < ncrossterm * 8; i = i + 4)
+	{
+		//showAtom(&ptr_atomVector->at(cmapArray[i] - 1));
+		int i1 = cmapArray[i    ]; int i2 = cmapArray[i + 1];
+		int i3 = cmapArray[i + 2]; int i4 = cmapArray[i + 3];
+		cout << i1 << " " << i2 << " " << i3 << " " << i4 << '\n';
+	}*/
+}
+
+void PSF::set_cmap_parm(vector<Cmap>& cmapParmVector)
+{
+	for (int i = 0; i < cmapArray.size() / 8; i++)
+	{
+		vector<Atom*>  p_at(8);
+		vector<string> attype(8);
+		for (int j = 0; j < 8; j++)
+		{
+			p_at[j] =
+			&ptr_atomVector->at(cmapArray[8 * i + j] - 1);
+
+			attype[j] = p_at[j]->PSFAtomName;
+		}
+
+		Dihedral dphi(p_at[0], p_at[1], p_at[2], p_at[3], 0., 0., 0.);
+		Dihedral dpsi(p_at[4], p_at[5], p_at[6], p_at[7], 0., 0., 0.);
+
+		Cmap cmap(dphi, dpsi);
+
+		for (int j = 0; j < ptr_cmapParmVector->size(); j++)
+		{
+			bool match = true;
+			for (int k = 0; k < 8; k++)
+			{
+				if (ptr_cmapParmVector->at(j).attype[k]
+					!= attype[k])
+				{
+					match = false;
+					break;
+				}
+			}
+			if (match)
+			{
+				cmap.attype = ptr_cmapParmVector->at(j).attype;
+
+				cmap.index_into_cmap_type = j;
+
+				break;
+			}
+		}
+
+		cmapVector.push_back(cmap);
+	}
+
+	cout << "REMARK " << cmapVector.size() << " cmap created.\n";
+}
 
 bool PSF::set_lj_parm(vector<Atom>& LJParmVector)
 {
