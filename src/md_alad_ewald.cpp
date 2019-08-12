@@ -61,6 +61,7 @@ int main (int argc, char** argv)
 	if (!PSFFile.set_lj_parm(ALL22.LJParmVector)) return 0;
 
 	PSFFile.make_exclusion_vector();
+	PSFFile.make_scaled1_4_vector();
 
 	System sys(opt);
 

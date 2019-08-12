@@ -48,6 +48,7 @@ class PSF
 	bool set_lj_parm(std::vector<Atom>& LJParmVector);
 
 	void make_exclusion_vector();
+	void make_scaled1_4_vector();
 
 	void showAtom(const Atom& atom);
 	void showResidue(int resID);

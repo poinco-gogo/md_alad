@@ -753,6 +753,18 @@ void PSF::make_exclusion_vector()
 
 } // end of function PSF::make_exclusion_vector()
 
+void PSF::make_scaled1_4_vector()
+{
+	for (auto& dihed: dihedralVector)
+	{
+		Atom* atom1 = dihed.ptr_atom1;
+		Atom* atom4 = dihed.ptr_atom4;
+
+		atom1 -> scaled1_4Vector.push_back(atom4 -> PSFIndex);
+		atom4 -> scaled1_4Vector.push_back(atom1 -> PSFIndex);
+	}
+}
+
 void PSF::writePDB(string filename, string header, const vector<int>& indexVector)
 {
 	PDBUtil PDBJOBS;
