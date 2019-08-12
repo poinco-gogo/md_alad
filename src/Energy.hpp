@@ -5,6 +5,7 @@
 #include <string>
 #include "Atom.hpp"
 #include "PSF.hpp"
+#include "LoadParm.hpp"
 #include "Lattice.hpp"
 #include "Option.hpp"
 #include "System.hpp"
@@ -12,6 +13,7 @@
 #include "ComputeAngle.hpp"
 #include "ComputeDihedral.hpp"
 #include "ComputeImproper.hpp"
+#include "ComputeCmap.hpp"
 #include "ComputeLJ.hpp"
 #include "ComputeES.hpp"
 
@@ -21,15 +23,16 @@ class Energy
 
         int outputEnergies;
 
-	Energy(const Option& opt, System& sys, std::vector<Atom>& atomVector, PSF& psf);
+	Energy(const Option& opt, System& sys, std::vector<Atom>& atomVector, PSF& psf, LoadParm& all22);
 
 	double temperature;
-	double ebond, eangle, edihed, eimprop, ees, elj, kinetic;
+	double ebond, eangle, edihed, eimprop, ecmap, ees, elj, kinetic;
 
 	ComputeBond              vbnd;
 	ComputeAngle             vang;
 	ComputeDihedral          vdih;
 	ComputeImproper          vimp;
+	ComputeCmap              vcmp;
 	ComputeLJ                vlj;
 	ComputeES                ves;
 

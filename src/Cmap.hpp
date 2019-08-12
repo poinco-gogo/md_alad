@@ -19,11 +19,14 @@ class Cmap
 		attype.push_back(at5); attype.push_back(at6);
 		attype.push_back(at7); attype.push_back(at8);
 
+		resize_matrix();
 	}
 	Cmap(Dihedral dihed_phi, Dihedral dihed_psi)
 	{
 		this -> dihed_phi = dihed_phi;
 		this -> dihed_psi = dihed_psi;
+
+		resize_matrix();
 	}
 	
 	Dihedral dihed_phi;
@@ -68,12 +71,19 @@ class Cmap
 	}
 
 	std::vector<std::string> attype;
-	Eigen::Matrix4d cmap_grid_data( res, res );
-	Eigen::Matrix4d cmap_dPhi( res, res );
-	Eigen::Matrix4d cmap_dPsi( res, res );
-	Eigen::Matrix4d cmap_dPhi_dPsi( res, res );
+	Eigen::MatrixXd cmap_grid_data, cmap_dPhi, cmap_dPsi, cmap_dPhi_dPsi;
 	int cmap_type_index;
 	Eigen::Vector3d force_phi1, force_phi2, force_phi3, force_phi4;
 	Eigen::Vector3d force_psi1, force_psi2, force_psi3, force_psi4;
+
+	private:
+
+	inline void resize_matrix()
+	{
+		cmap_grid_data.resize( res, res );
+		cmap_dPhi.resize( res, res );
+		cmap_dPsi.resize( res, res );
+		cmap_dPhi_dPsi.resize( res, res );
+	}
 };
 #endif

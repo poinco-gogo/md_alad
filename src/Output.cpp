@@ -45,8 +45,8 @@ void Output::print_energy(int istep)
 		<< setw(16) << ene.ebond
 		<< setw(16) << ene.eangle
 		<< setw(16) << ene.edihed
+		<< setw(16) << ene.ecmap
 		<< setw(16) << ene.eimprop
-		<< setw(16) << 0.
 		<< setw(16) << ene.elj
 		<< setw(16) << ene.ees
 		<< setw(16) << totpot

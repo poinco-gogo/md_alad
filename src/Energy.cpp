@@ -8,7 +8,7 @@
 #include "common.hpp"
 using namespace std;
 
-Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& psf)
+Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& psf, LoadParm& all22)
 {
 	this->ptr_sys            = &sys;
 	this->ptr_atomVector     = &atomVector;
@@ -21,6 +21,7 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 	ComputeAngle             tmp_ang(psf.angleVector);
 	ComputeDihedral          tmp_dih(psf.dihedralVector);
 	ComputeImproper          tmp_imp(psf.improperVector);
+	ComputeCmap              tmp_cmp(all22, psf.cmapVector);
 	ComputeLJ                tmp_lj(opt, sys, atomVector);
 	ComputeES                tmp_es(opt, sys, atomVector, psf);
 
@@ -28,6 +29,7 @@ Energy::Energy(const Option& opt, System& sys, vector<Atom>& atomVector, PSF& ps
 	this->vang               = tmp_ang;
 	this->vdih               = tmp_dih;
 	this->vimp               = tmp_imp;
+	this->vcmp               = tmp_cmp;
 	this->vlj                = tmp_lj;
 	this->ves                = tmp_es;
 
@@ -64,6 +66,7 @@ void Energy::calc_force()
 	eangle                   = vang.compute_force();
 	edihed                   = vdih.compute_force();
 	eimprop                  = vimp.compute_force();
+	ecmap                    = vcmp.compute_force();
 	elj                      = vlj.compute_force();
 	ees                      = ves.compute_force();
 }
