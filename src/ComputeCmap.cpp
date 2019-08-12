@@ -204,7 +204,7 @@ double ComputeCmap::calc_cmap(const double phi, const double psi, const int cmap
 	}
 
 	dEdPhi /= stepSize;
-	dEdPSi /= stepSize;
+	dEdPsi /= stepSize;
 
 	return E;
 }
