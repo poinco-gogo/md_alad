@@ -53,6 +53,8 @@ int main (int argc, char** argv)
 	if (opt.rigidBonds) PSFFile.make_water_shake_bond_array();
 
 	LoadParm ALL22(opt.parameters);
+	if (opt.topparfile != "")
+		if (!ALL22.merge(opt.topparfile)) return 0;
 	if (!PSFFile.set_bond_parm(ALL22.bondParmVector)) return 0;
 	if (!PSFFile.set_angle_parm(ALL22.angleParmVector)) return 0;
 	if (!PSFFile.set_dihedral_parm(ALL22.dihedralParmVector)) return 0;
